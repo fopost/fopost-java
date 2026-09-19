@@ -1,7 +1,9 @@
 package com.fopost.sdk.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fopost.sdk.internal.ApiClient;
+import com.fopost.sdk.internal.Json;
 import com.fopost.sdk.model.Account;
 import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
@@ -35,7 +37,19 @@ public final class AccountsResource {
     }
 
     public List<Account> list(String workspaceId) {
-        return http.convertList(ApiClient.unwrap(http.get("/v1/accounts", query("workspaceId", workspaceId))),
+        return list(workspaceId, null);
+    }
+
+    /** {@code groupId} keeps only the accounts in that account group. Either argument may be null. */
+    public List<Account> list(String workspaceId, String groupId) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        if (workspaceId != null) {
+            params.put("workspaceId", workspaceId);
+        }
+        if (groupId != null) {
+            params.put("group_id", groupId);
+        }
+        return http.convertList(ApiClient.unwrap(http.get("/v1/accounts", params.isEmpty() ? null : params)),
                 Account.class);
     }
 
@@ -46,6 +60,30 @@ public final class AccountsResource {
     /** Connect an account with credentials you already hold, instead of the dashboard OAuth flow. */
     public Account create(CreateAccountParams params) {
         return http.convert(ApiClient.unwrap(http.post("/v1/accounts", params.toMap())), Account.class);
+    }
+
+    /**
+     * Set the name shown instead of the platform name. {@code null} or an empty string restores the
+     * platform name. Returns {@code id}, {@code name} and {@code platformName}.
+     */
+    public Account rename(String accountId, String displayName) {
+        // An ObjectNode keeps an explicit null, which the shared mapper would drop from a Map.
+        ObjectNode body = Json.MAPPER.createObjectNode().put("display_name", displayName);
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", "/v1/accounts/" + accountId, body, null)), Account.class);
+    }
+
+    /**
+     * Move the account to another workspace the caller owns. Returns {@code id} and {@code workspaceId}.
+     *
+     * <p>A 409 is a {@code FoPostException}: code {@code move_blocked} carries {@code blocking_tables} on
+     * {@code body()}; otherwise the target already has an account on that network.
+     */
+    public Account move(String accountId, String workspaceId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace_id", workspaceId);
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/" + accountId + "/move", body)), Account.class);
     }
 
     /** Disconnect the account. Posts already published stay where they are. */
