@@ -42,6 +42,7 @@ public final class CreatePostParams {
     private String autoPlugContent;
     private Map<String, Object> settings;
     private String companionOf;
+    private String accountGroupId;
 
     private CreatePostParams(String workspaceId) {
         this.workspaceId = workspaceId;
@@ -64,6 +65,12 @@ public final class CreatePostParams {
         if (accountIds != null) {
             accounts.addAll(accountIds);
         }
+        return this;
+    }
+
+    /** Target every account in the group too; the server merges it with {@code accounts}. */
+    public CreatePostParams accountGroupId(String accountGroupId) {
+        this.accountGroupId = accountGroupId;
         return this;
     }
 
@@ -182,7 +189,10 @@ public final class CreatePostParams {
     public Map<String, Object> toMap() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("workspace_id", workspaceId);
-        body.put("accounts", accounts);
+        if (!accounts.isEmpty() || accountGroupId == null) {
+            body.put("accounts", accounts);
+        }
+        Params.put(body, "account_group_id", accountGroupId);
         body.put("content", content);
         Params.put(body, "status", status);
         Params.put(body, "content_type", contentType);
