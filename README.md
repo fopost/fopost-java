@@ -108,6 +108,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `reply`, `hide`, `unhide`, `delete`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
+| `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
 `accounts().communities()` covers the X communities an account can post into: `list`, `sync`,
 `search`, `add`, `remove`.
@@ -203,6 +204,24 @@ client.ads().setStatus(boost.id(), workspace.id(), "active");
 
 A boost or ad starts paused unless `paused(false)` is set, so nothing is spent until it is
 resumed. `boost`, `create`, `setStatus` and `delete` need the `publish` scope as well as `ads`.
+
+## Validation
+
+Check a draft, a text, or a media url against the platform rules before creating anything:
+
+```java
+PostValidation check = client.validate().post(
+        ValidatePostParams.of("twitter", "linkedin").content("Shipping today"));
+if (!check.isReady()) {
+    check.platforms().forEach(p -> System.out.println(p.platform() + ": " + p.issues()));
+}
+
+LengthValidation length = client.validate().length("Shipping today", "twitter");
+MediaValidation file = client.validate().media("https://cdn.example.test/chart.png");
+```
+
+Nothing is stored. `media` answers `200` with `ok` false when the file fails a check; an
+unreachable url throws `ValidationException`. All three need the `posts` scope.
 
 ## Configuration
 
