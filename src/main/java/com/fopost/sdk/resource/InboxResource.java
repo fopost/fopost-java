@@ -1,11 +1,14 @@
 package com.fopost.sdk.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fopost.sdk.internal.ApiClient;
+import com.fopost.sdk.internal.Json;
 import com.fopost.sdk.model.InboxAccount;
 import com.fopost.sdk.model.InboxApproval;
 import com.fopost.sdk.model.InboxApprovalDecision;
 import com.fopost.sdk.model.InboxConversation;
+import com.fopost.sdk.model.InboxConversationStarted;
 import com.fopost.sdk.model.InboxItem;
 import com.fopost.sdk.model.InboxPage;
 import com.fopost.sdk.model.InboxPageMeta;
@@ -14,7 +17,9 @@ import com.fopost.sdk.model.InboxRefreshResult;
 import com.fopost.sdk.model.InboxReplyResult;
 import com.fopost.sdk.model.InboxThread;
 import com.fopost.sdk.param.InboxListParams;
+import com.fopost.sdk.param.InboxReplyParams;
 import com.fopost.sdk.param.InboxThreadParams;
+import com.fopost.sdk.param.StartConversationParams;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,7 +38,9 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * <p>Every call needs the {@code inbox} scope on an API key.
+ * <p>Every call needs the {@code inbox} scope on an API key. The calls that act on the platform as
+ * the account (like, pin, react, edit, start a conversation, typing, a reply with media or quick
+ * replies, deleting our own reply) also need the {@code publish} scope.
  */
 public final class InboxResource {
 
@@ -145,6 +152,14 @@ public final class InboxResource {
                 ApiClient.unwrap(http.request("PATCH", "/v1/inbox/" + itemId, body, null)), InboxItem.class);
     }
 
+    /** Edit our own comment on the platform. Only where {@code canEdit} is true; also needs {@code publish}. */
+    public InboxItem editComment(String itemId, String text) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("text", text);
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", "/v1/inbox/" + itemId, body, null)), InboxItem.class);
+    }
+
     // ─── Acting on an item ────────────────────────────────────────────────────
 
     /** Send the reply on the platform as the connected account. Only where {@code canReply} is true. */
@@ -155,6 +170,12 @@ public final class InboxResource {
                 ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/reply", body)), InboxReplyResult.class);
     }
 
+    /** A reply with media or quick replies. Only where {@code canReply} is true. */
+    public InboxReplyResult reply(String itemId, InboxReplyParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/reply", params.toMap())), InboxReplyResult.class);
+    }
+
     public InboxItem hide(String itemId) {
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/hide", null)), InboxItem.class);
     }
@@ -163,9 +184,61 @@ public final class InboxResource {
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unhide", null)), InboxItem.class);
     }
 
-    /** Remove the comment from the platform where it was left. Only where {@code canDelete} is true. */
+    /**
+     * Remove the comment from the platform, whether someone else wrote it or it is our own reply. Only
+     * where {@code canDelete} is true; deleting our own reply also needs {@code publish}.
+     */
     public boolean delete(String itemId) {
         return ApiClient.unwrap(http.delete("/v1/inbox/" + itemId)).path("deleted").asBoolean(false);
+    }
+
+    /** A like, an upvote on Reddit, a favourite on Mastodon. Only where {@code canLike} is true. */
+    public InboxItem like(String itemId) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/like", null)), InboxItem.class);
+    }
+
+    public InboxItem unlike(String itemId) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unlike", null)), InboxItem.class);
+    }
+
+    /** Pin our own comment. Only where {@code canPin} is true. */
+    public InboxItem pin(String itemId) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/pin", null)), InboxItem.class);
+    }
+
+    public InboxItem unpin(String itemId) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unpin", null)), InboxItem.class);
+    }
+
+    /** React to a message with an emoji, or {@code null} to remove ours. Only where {@code canReact} is true. */
+    public InboxItem react(String itemId, String reaction) {
+        // An ObjectNode keeps an explicit null, which the mapper drops from a Map.
+        ObjectNode body = Json.MAPPER.createObjectNode();
+        body.put("reaction", reaction);
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/react", body)), InboxItem.class);
+    }
+
+    // ─── Conversations ────────────────────────────────────────────────────────
+
+    /** Open a DM, by handle or as a private reply to a comment. Also needs {@code publish}. */
+    public InboxConversationStarted startConversation(StartConversationParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/conversations", params.toMap())), InboxConversationStarted.class);
+    }
+
+    /** Show the typing indicator in a DM thread. */
+    public boolean setTyping(String conversationId, String accountId) {
+        return setTyping(conversationId, accountId, true);
+    }
+
+    /** Show or clear the typing indicator in a DM thread. Returns whether it is now shown. Also needs {@code publish}. */
+    public boolean setTyping(String conversationId, String accountId, boolean on) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("account_id", accountId);
+        body.put("on", on);
+        return ApiClient.unwrap(http.post("/v1/inbox/conversations/" + conversationId + "/typing", body))
+                .path("typing")
+                .asBoolean(false);
     }
 
     // ─── Approvals ────────────────────────────────────────────────────────────

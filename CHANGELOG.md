@@ -6,8 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-19
+
 ### Added
 
+- `inbox()`: `like`, `unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`
+  (`StartConversationParams`), `setTyping`, and `reply` with `InboxReplyParams` for media and quick
+  replies. All of them also need the `publish` scope, as does deleting our own reply.
+- `InboxItem` gains `liked`, `pinned`, `reaction`, `editedAt` and the `canLike`, `canPin`,
+  `canEdit`, `canReact`, `canSendMedia`, `canQuickReply` and `canPrivateReply` flags;
+  `InboxAccount` gains `canStartConversation`.
 - `validate` resource (`client.validate()`): `post`, `length` and `media` check a draft, a text
   length, or a media url against the platform rules without creating a post. Needs the `posts`
   scope.

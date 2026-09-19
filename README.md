@@ -9,12 +9,12 @@ Official Java SDK for the [FoPost](https://fopost.com) API. Schedule and publish
 <dependency>
   <groupId>com.fopost</groupId>
   <artifactId>fopost-java</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.fopost:fopost-java:0.2.0")
+implementation("com.fopost:fopost-java:0.3.0")
 ```
 
 Requires Java 17 or newer. HTTP goes through the JDK's own client; the only dependency is Jackson.
@@ -107,7 +107,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
-| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `reply`, `hide`, `unhide`, `delete`, `listApprovals`, `approveReply`, `rejectReply` |
+| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
@@ -198,6 +198,11 @@ client.inbox().update(itemId, "snoozed", Instant.parse("2026-09-02T09:00:00Z"));
 in) and `conversations` per DM thread. `listApprovals` returns replies an automation or the agent
 drafted that a person still has to send; `approveReply` sends the draft (or your edited text) and
 `rejectReply` discards it.
+
+The actions that act on the platform as the account also need the `publish` scope: `like`,
+`unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, a `reply` with
+`InboxReplyParams` carrying `mediaIds` or `quickReplies`, and deleting our own reply. Each works only
+where the item's matching `can*` flag is true.
 
 ## Ads
 
