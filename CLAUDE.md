@@ -171,8 +171,8 @@ on PRs, and on manual dispatch.
 
 ## Releasing
 
-**`com.fopost:fopost-java` is NOT yet on Maven Central.** `.github/workflows/release.yml` exists
-and is ready: it triggers on a `v*` tag (or manual dispatch), runs in the `central` GitHub
+**`com.fopost:fopost-java` is on Maven Central** (0.2.0 at the time of writing).
+`.github/workflows/release.yml` triggers on a `v*` tag (or manual dispatch), runs in the `central` GitHub
 environment, verifies the tag matches `pom.xml` **and** that `Version.java` matches, runs
 `mvn -B verify`, then publishes with `mvn -B -Prelease deploy -DskipTests` through the
 `central-publishing-maven-plugin` (`autoPublish=true`) with GPG signing.
@@ -184,10 +184,10 @@ environment, verifies the tag matches `pom.xml` **and** that `Version.java` matc
 - `GPG_PRIVATE_KEY`
 - `GPG_PASSPHRASE`
 
-First publish also requires, outside GitHub:
+Publishing also depends on, outside GitHub:
 
 1. **Namespace verification for `com.fopost`** on the Sonatype Central Portal (a DNS TXT record on
-   `fopost.com`). Nothing can be published until it is verified.
+   `fopost.com`). It is verified.
 2. A **user token** generated on the Central Portal — that pair is what
    `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_TOKEN` hold, not the portal login.
 3. A **GPG key pair** whose public key is published to a public keyserver; the ASCII-armoured
