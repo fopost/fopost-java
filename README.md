@@ -104,7 +104,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                 |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                     |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
-| `media()`       | `list`, `upload`, `delete`                                                                                                                                                                   |
+| `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `reply`, `hide`, `unhide`, `delete`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
@@ -129,6 +129,19 @@ UploadedMedia file = client.media().upload(workspace.id(), Path.of("chart.png"))
 client.posts().create(CreatePostParams.of(workspace.id())
         .accounts(accountId)
         .block(ContentBlockInput.text("Numbers are in").media(file.toMediaItem())));
+```
+
+A direct upload sends the bytes to storage instead of through the API. `uploadDirect` does the
+three steps in one call; `presign` and `complete` are the steps themselves, for a client that
+sends the bytes some other way:
+
+```java
+UploadedMedia file = client.media().uploadDirect(workspace.id(), "chart.png", "image/png", bytes);
+
+PresignedUpload reserved = client.media().presign(
+        PresignUploadParams.of(workspace.id(), "chart.png", "image/png", bytes.length));
+// PUT bytes to reserved.uploadUrl() with reserved.headers(), then:
+UploadedMedia same = client.media().complete(reserved.uploadId());
 ```
 
 ## Webhooks
