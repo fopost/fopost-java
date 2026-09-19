@@ -61,7 +61,7 @@ class BlogsTest {
         assertEquals("PATCH", transport.last().method());
         assertEquals(
                 "https://api.fopost.test/v1/accounts/a1/blogs/11/articles/99", transport.last().url());
-        assertEquals("{\"title\":\"Spring drop, restocked\"}", transport.last().bodyAsString());
+        assertEquals("{\"title\":\"Spring drop, restocked\"}", transport.lastBody());
     }
 
     @Test
@@ -76,7 +76,7 @@ class BlogsTest {
         assertEquals("POST", transport.last().method());
         assertEquals(
                 "{\"title\":\"Spring drop\",\"body\":\"Hello\",\"status\":\"draft\"}",
-                transport.last().bodyAsString());
+                transport.lastBody());
     }
 
     @Test
@@ -106,7 +106,7 @@ class BlogsTest {
 
         assertEquals("PATCH", transport.last().method());
         assertEquals(
-                "{\"title\":\"Mug XL\",\"product_type\":\"Drinkware\"}", transport.last().bodyAsString());
+                "{\"title\":\"Mug XL\",\"product_type\":\"Drinkware\"}", transport.lastBody());
         assertEquals("12.00", product.price());
     }
 }
