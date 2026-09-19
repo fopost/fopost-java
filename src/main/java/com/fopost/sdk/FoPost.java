@@ -6,6 +6,7 @@ import com.fopost.sdk.internal.JdkTransport;
 import com.fopost.sdk.internal.Sleeper;
 import com.fopost.sdk.internal.Transport;
 import com.fopost.sdk.internal.Version;
+import com.fopost.sdk.resource.AccountGroupsResource;
 import com.fopost.sdk.resource.AccountsResource;
 import com.fopost.sdk.resource.AdsResource;
 import com.fopost.sdk.resource.AiResource;
@@ -57,6 +58,7 @@ public final class FoPost {
     private final ApiClient http;
     private final PostsResource posts;
     private final AccountsResource accounts;
+    private final AccountGroupsResource accountGroups;
     private final WorkspacesResource workspaces;
     private final LabelsResource labels;
     private final WebhooksResource webhooks;
@@ -72,6 +74,7 @@ public final class FoPost {
         this.http = http;
         this.posts = new PostsResource(http);
         this.accounts = new AccountsResource(http);
+        this.accountGroups = new AccountGroupsResource(http);
         this.workspaces = new WorkspacesResource(http);
         this.labels = new LabelsResource(http);
         this.webhooks = new WebhooksResource(http);
@@ -103,6 +106,10 @@ public final class FoPost {
 
     public AccountsResource accounts() {
         return accounts;
+    }
+
+    public AccountGroupsResource accountGroups() {
+        return accountGroups;
     }
 
     public WorkspacesResource workspaces() {
