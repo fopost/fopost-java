@@ -197,6 +197,18 @@ public final class InboxResource {
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/like", null)), InboxItem.class);
     }
 
+    /**
+     * Vote an item up or down where the network ranks by votes (Reddit). {@code direction} is
+     * {@code up}, {@code down}, or {@code none} to take an earlier vote back. Only where
+     * {@code canVote} is true. An upvote is the same call {@code like} makes, so {@code liked}
+     * moves with it.
+     */
+    public InboxItem vote(String itemId, String direction) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("direction", direction);
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/vote", body)), InboxItem.class);
+    }
+
     public InboxItem unlike(String itemId) {
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unlike", null)), InboxItem.class);
     }

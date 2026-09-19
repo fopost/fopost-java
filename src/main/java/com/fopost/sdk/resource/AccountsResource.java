@@ -9,6 +9,10 @@ import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
 import com.fopost.sdk.model.AccountValidation;
 import com.fopost.sdk.model.AccountsHealthSummary;
+import com.fopost.sdk.model.RedditDefaultSubreddit;
+import com.fopost.sdk.model.RedditFlairs;
+import com.fopost.sdk.model.RedditSubreddit;
+import com.fopost.sdk.model.RedditSubredditRules;
 import com.fopost.sdk.model.TelegramBotCommand;
 import com.fopost.sdk.model.TelegramBotCommands;
 import com.fopost.sdk.model.TelegramConnectCode;
@@ -193,6 +197,47 @@ public final class AccountsResource {
         return http.convert(
                 ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/telegram/commands")),
                 TelegramBotCommands.class);
+    }
+
+    /**
+     * Subreddits a Reddit account is in, busiest first, plus its own profile page.
+     *
+     * <p>A 409 with code {@code reconnect_required} means the grant is short of a permission
+     * this read needs, and the account has to be reconnected.
+     */
+    public List<RedditSubreddit> redditSubreddits(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/reddit/subreddits", null)),
+                RedditSubreddit.class);
+    }
+
+    /** The rules a subreddit publishes, in its own order. Show them before publishing. */
+    public RedditSubredditRules redditSubredditRules(String accountId, String subreddit) {
+        String path = "/v1/accounts/" + accountId + "/reddit/subreddits/" + subreddit + "/rules";
+        return http.convert(ApiClient.unwrap(http.get(path, null)), RedditSubredditRules.class);
+    }
+
+    /**
+     * Post flairs one subreddit offers. A flair id is valid only there, and one from elsewhere
+     * fails preflight.
+     */
+    public RedditFlairs redditFlairs(String accountId, String subreddit) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/reddit/flairs",
+                        query("subreddit", subreddit))),
+                RedditFlairs.class);
+    }
+
+    /**
+     * Where posts from this account go when a post names no subreddit. Pass null to fall back to
+     * the account's own profile page, which always accepts a post.
+     */
+    public RedditDefaultSubreddit setRedditDefaultSubreddit(String accountId, String subreddit) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("subreddit", subreddit);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/reddit/default-subreddit", body)),
+                RedditDefaultSubreddit.class);
     }
 
     private static Map<String, Object> query(String key, Object value) {

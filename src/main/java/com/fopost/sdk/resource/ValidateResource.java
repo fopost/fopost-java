@@ -4,6 +4,7 @@ import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.model.LengthValidation;
 import com.fopost.sdk.model.MediaValidation;
 import com.fopost.sdk.model.PostValidation;
+import com.fopost.sdk.model.SubredditCheck;
 import com.fopost.sdk.param.ValidatePostParams;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,5 +53,18 @@ public final class ValidateResource {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("url", url);
         return http.convert(ApiClient.unwrap(http.post("/v1/validate/media", body)), MediaValidation.class);
+    }
+
+    /**
+     * Whether a subreddit exists and takes a post from a connected Reddit account.
+     *
+     * <p>The check runs with that account's own token, so {@code accountId} is required.
+     */
+    public SubredditCheck subreddit(String accountId, String name) {
+        Map<String, Object> query = new LinkedHashMap<>();
+        query.put("account_id", accountId);
+        query.put("name", name);
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/validate/subreddit", query)), SubredditCheck.class);
     }
 }
