@@ -61,7 +61,7 @@ src/main/java/com/fopost/sdk/
   resource/                PostsResource, AccountsResource (+ .communities()), WorkspacesResource,
                            LabelsResource, WebhooksResource, AnalyticsResource,
                            AutomationsResource, MediaResource, AiResource, CommunitiesResource,
-                           InboxResource, AdsResource
+                           InboxResource, AdsResource, ValidateResource
 ```
 
 **Request flow.** `client.posts().create(params)` → `PostsResource` builds the body and calls
@@ -80,8 +80,8 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `ads`. This is the most
-complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `ads`, `validate`. This is
+the most complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
 anything unwrapped.
 
 - `inbox` (scope `inbox`) covers `/v1/inbox/*` except `/v1/inbox/chat/*` (browser-encrypted X

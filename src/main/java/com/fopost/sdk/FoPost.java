@@ -15,6 +15,7 @@ import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
+import com.fopost.sdk.resource.ValidateResource;
 import com.fopost.sdk.resource.WebhooksResource;
 import com.fopost.sdk.resource.WorkspacesResource;
 import java.time.Duration;
@@ -65,6 +66,7 @@ public final class FoPost {
     private final AiResource ai;
     private final InboxResource inbox;
     private final AdsResource ads;
+    private final ValidateResource validate;
 
     private FoPost(ApiClient http) {
         this.http = http;
@@ -79,6 +81,7 @@ public final class FoPost {
         this.ai = new AiResource(http);
         this.inbox = new InboxResource(http);
         this.ads = new AdsResource(http);
+        this.validate = new ValidateResource(http);
     }
 
     /** A client reading its key from {@code FOPOST_API_KEY}. */
@@ -136,6 +139,10 @@ public final class FoPost {
 
     public AdsResource ads() {
         return ads;
+    }
+
+    public ValidateResource validate() {
+        return validate;
     }
 
     public String baseUrl() {
