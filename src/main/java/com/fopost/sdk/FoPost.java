@@ -12,6 +12,7 @@ import com.fopost.sdk.resource.AdsResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
+import com.fopost.sdk.resource.BlogsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
@@ -68,6 +69,7 @@ public final class FoPost {
     private final AiResource ai;
     private final InboxResource inbox;
     private final AdsResource ads;
+    private final BlogsResource blogs;
     private final ValidateResource validate;
 
     private FoPost(ApiClient http) {
@@ -84,6 +86,7 @@ public final class FoPost {
         this.ai = new AiResource(http);
         this.inbox = new InboxResource(http);
         this.ads = new AdsResource(http);
+        this.blogs = new BlogsResource(http);
         this.validate = new ValidateResource(http);
     }
 
@@ -138,6 +141,11 @@ public final class FoPost {
 
     public AiResource ai() {
         return ai;
+    }
+
+    /** Articles and products that already live on a connected site. */
+    public BlogsResource blogs() {
+        return blogs;
     }
 
     public InboxResource inbox() {
