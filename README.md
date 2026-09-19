@@ -108,7 +108,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
-| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
+| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
 `accounts().communities()` covers the X communities an account can post into: `list`, `sync`,
@@ -224,6 +224,24 @@ client.ads().setStatus(boost.id(), workspace.id(), "active");
 A boost or ad starts paused unless `paused(false)` is set, so nothing is spent until it is
 resumed. `boost`, `create`, `setStatus` and `delete` need the `publish` scope as well as `ads`.
 
+The campaigns, ad sets and ads already on an ad account are read live from Meta and addressed by
+their Meta ids plus the connection:
+
+```java
+AdAccountTree tree = client.ads().accountTree("act_123", connectionId);
+
+AdInsightsReport week = client.ads().insights(
+        connectionId, tree.campaigns().get(0).id(),
+        AdInsightsParams.of("2026-09-01", "2026-09-07").breakdown("age").daily(true));
+
+client.ads().bulkSetStatus(BulkAdStatusParams.of(workspace.id(), connectionId, "paused")
+        .campaign(tree.campaigns().get(0).id()));
+```
+
+Creating, updating, deleting and duplicating campaigns, ad sets and network ads, and
+`bulkSetStatus`, need the `publish` scope as well as `ads`. `leadsFeed` pages with a cursor: pass
+`nextCursor` back through `LeadsFeedParams.cursor(...)` until it is null.
+
 ## Validation
 
 Check a draft, a text, or a media url against the platform rules before creating anything:
@@ -297,7 +315,9 @@ read endpoints keep working without one.
 An API key carries only the scopes granted when it was created, and every request is confined to
 the workspaces that key can reach. `posts` also covers publishing, deliveries, and media; the rest
 are `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`, `inbox`, and `ads`.
-The ads calls that spend money (`boost`, `create`, `setStatus`, `delete`) need `publish` too.
+The ads calls that spend money (`boost`, `create`, `setStatus`, `delete`, and every create,
+update, delete and duplicate on campaigns, ad sets and network ads, plus `bulkSetStatus`) need
+`publish` too.
 
 ## Example
 

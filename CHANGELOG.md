@@ -10,6 +10,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `ads()`: the campaign tree and its objects, read live from Meta: `accountTree`, and
+  create/get/update/delete/duplicate for campaigns, ad sets and network ads, plus `bulkSetStatus`.
+  The writes need the `publish` scope as well as `ads`.
+- `ads()`: `creatives`, `createCreative` (image, video or carousel), `creative`, `deleteCreative`;
+  `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`; `estimateReach`; `insights`
+  and `adInsights` with an optional breakdown and daily timeline.
+- `ads()`: `leadForm`, `archiveLeadForm`, the cursor-paged `leadsFeed`, and `leadPages`,
+  `subscribeLeadPage`, `unsubscribeLeadPage`.
+- `CreateAdParams.urlTags` and `Ad.Creative.urlTags`.
+
 - `inbox()`: `like`, `unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`
   (`StartConversationParams`), `setTyping`, and `reply` with `InboxReplyParams` for media and quick
   replies. All of them also need the `publish` scope, as does deleting our own reply.
