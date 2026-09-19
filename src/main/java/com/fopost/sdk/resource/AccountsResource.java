@@ -9,12 +9,16 @@ import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
 import com.fopost.sdk.model.AccountValidation;
 import com.fopost.sdk.model.AccountsHealthSummary;
+import com.fopost.sdk.model.SlackChannel;
+import com.fopost.sdk.model.SlackIdentity;
+import com.fopost.sdk.model.SlackMember;
 import com.fopost.sdk.model.TelegramBotCommand;
 import com.fopost.sdk.model.TelegramBotCommands;
 import com.fopost.sdk.model.TelegramConnectCode;
 import com.fopost.sdk.model.TelegramConnectStatus;
 import com.fopost.sdk.model.TokenRefresh;
 import com.fopost.sdk.param.CreateAccountParams;
+import com.fopost.sdk.param.UpdateSlackIdentityParams;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +197,40 @@ public final class AccountsResource {
         return http.convert(
                 ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/telegram/commands")),
                 TelegramBotCommands.class);
+    }
+
+    /**
+     * Channels the Slack app can post to: every public channel, and private ones it was invited to.
+     *
+     * <p>A 409 {@code webhook_connection} means the account posts through a webhook; reconnect it with
+     * the Slack app. The same applies to the other Slack calls.
+     */
+    public List<SlackChannel> listSlackChannels(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/slack/channels", null)),
+                SlackChannel.class);
+    }
+
+    /** People in the connected Slack workspace, for addressing a DM. */
+    public List<SlackMember> listSlackMembers(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/slack/members", null)),
+                SlackMember.class);
+    }
+
+    /** The name and icon this Slack account posts under. */
+    public SlackIdentity getSlackIdentity(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/slack/identity", null)),
+                SlackIdentity.class);
+    }
+
+    /** Change the name or icon this Slack account posts under. */
+    public SlackIdentity updateSlackIdentity(String accountId, UpdateSlackIdentityParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "PATCH", "/v1/accounts/" + accountId + "/slack/identity", params.toJson(), null)),
+                SlackIdentity.class);
     }
 
     private static Map<String, Object> query(String key, Object value) {
