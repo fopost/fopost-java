@@ -9,6 +9,10 @@ import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
 import com.fopost.sdk.model.AccountValidation;
 import com.fopost.sdk.model.AccountsHealthSummary;
+import com.fopost.sdk.model.TelegramBotCommand;
+import com.fopost.sdk.model.TelegramBotCommands;
+import com.fopost.sdk.model.TelegramConnectCode;
+import com.fopost.sdk.model.TelegramConnectStatus;
 import com.fopost.sdk.model.TokenRefresh;
 import com.fopost.sdk.param.CreateAccountParams;
 import java.util.LinkedHashMap;
@@ -141,6 +145,54 @@ public final class AccountsResource {
         return http.convert(
                 ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/analytics", query("limit", limit))),
                 AccountAnalyticsHistory.class);
+    }
+
+    /** Mint a Telegram connect code for the key's only workspace. */
+    public TelegramConnectCode createTelegramConnectCode() {
+        return createTelegramConnectCode(null);
+    }
+
+    /**
+     * Mint a one-time code, valid for 15 minutes. Sending {@code /connect <code>} to the bot in a chat
+     * connects that chat. {@code workspaceId} may be null for a key bound to one workspace.
+     */
+    public TelegramConnectCode createTelegramConnectCode(String workspaceId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (workspaceId != null) {
+            body.put("workspaceId", workspaceId);
+        }
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/telegram/connect-code", body)), TelegramConnectCode.class);
+    }
+
+    /** Whether a connect code has been used yet, and the account it connected. */
+    public TelegramConnectStatus getTelegramConnectStatus(String code) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/telegram/connect-code/status", query("code", code))),
+                TelegramConnectStatus.class);
+    }
+
+    /** The command menu the bot shows in this Telegram chat. */
+    public TelegramBotCommands getTelegramBotCommands(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/telegram/commands", null)),
+                TelegramBotCommands.class);
+    }
+
+    /** Replace the command menu for this Telegram chat, 1-100 commands. */
+    public TelegramBotCommands setTelegramBotCommands(String accountId, List<TelegramBotCommand> commands) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("commands", commands);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/telegram/commands", body)),
+                TelegramBotCommands.class);
+    }
+
+    /** Clear the command menu for this Telegram chat. */
+    public TelegramBotCommands deleteTelegramBotCommands(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/telegram/commands")),
+                TelegramBotCommands.class);
     }
 
     private static Map<String, Object> query(String key, Object value) {
