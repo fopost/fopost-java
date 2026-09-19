@@ -1,14 +1,18 @@
 package com.fopost.sdk;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fopost.sdk.model.Webhook;
 import com.fopost.sdk.model.WebhookEvents;
 import com.fopost.sdk.param.AnalyticsParams;
 import com.fopost.sdk.param.CaptionParams;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ResourcesTest {
@@ -100,6 +104,61 @@ class ResourcesTest {
         String body = transport.lastBody();
         assertTrue(body.contains("name=\"files\"; filename=\"a.png\""));
         assertTrue(body.contains("name=\"workspaceId\""));
+    }
+
+    @Test
+    void mediaUploadDirectPresignsPutsAndCompletes() {
+        FakeTransport transport = new FakeTransport()
+                .enqueue(201, """
+                        {"data":{"uploadId":"u1","uploadUrl":"https://bucket.test/u1?sig=abc","method":"PUT",
+                                 "headers":{"Content-Type":"image/png"},"expiresAt":"2026-09-19T12:00:00Z"}}""")
+                .enqueue(200, "", Map.of())
+                .enqueue(201, "{\"data\":{\"id\":\"m1\",\"type\":\"image\",\"name\":\"a.png\","
+                        + "\"url\":\"https://cdn.test/a.png\",\"previewUrl\":\"https://cdn.test/p.png\",\"size\":3}}");
+
+        var uploaded = TestSupport.client(transport)
+                .media()
+                .uploadDirect("w1", "a.png", "image/png", new byte[] {1, 2, 3});
+
+        assertEquals(3, transport.callCount());
+        var presign = transport.requests.get(0);
+        assertEquals("POST", presign.method());
+        assertEquals("https://api.fopost.test/v1/media/presign", presign.url());
+        String presignBody = new String(presign.body(), StandardCharsets.UTF_8);
+        assertTrue(presignBody.contains("\"workspaceId\":\"w1\""));
+        assertTrue(presignBody.contains("\"filename\":\"a.png\""));
+        assertTrue(presignBody.contains("\"mimeType\":\"image/png\""));
+        assertTrue(presignBody.contains("\"size\":3"));
+
+        var put = transport.requests.get(1);
+        assertEquals("PUT", put.method());
+        assertEquals("https://bucket.test/u1?sig=abc", put.url());
+        assertEquals(Map.of("Content-Type", "image/png"), put.headers());
+        assertArrayEquals(new byte[] {1, 2, 3}, put.body());
+
+        var complete = transport.requests.get(2);
+        assertEquals("POST", complete.method());
+        assertEquals("https://api.fopost.test/v1/media/presign/u1/complete", complete.url());
+        assertEquals("fp_test", complete.headers().get("X-API-Key"));
+        assertEquals("m1", uploaded.id());
+        assertEquals(3L, uploaded.size());
+    }
+
+    @Test
+    void mediaUploadDirectThrowsWhenThePutIsRejected() {
+        FakeTransport transport = new FakeTransport()
+                .enqueue(201, """
+                        {"data":{"uploadId":"u1","uploadUrl":"https://bucket.test/u1","method":"PUT",
+                                 "headers":{"Content-Type":"image/png"},"expiresAt":"2026-09-19T12:00:00Z"}}""")
+                .enqueue(403, "<Error>SignatureDoesNotMatch</Error>", Map.of());
+
+        var client = TestSupport.client(transport);
+        var error = assertThrows(
+                PermissionDeniedException.class,
+                () -> client.media().uploadDirect("w1", "a.png", "image/png", new byte[] {1}));
+
+        assertEquals(403, error.status());
+        assertEquals(2, transport.callCount());
     }
 
     @Test

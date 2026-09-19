@@ -128,6 +128,27 @@ public final class ApiClient {
         }
     }
 
+    /**
+     * Send bytes to an absolute URL with only the given headers: no API key, no retry. Used for
+     * the PUT to a presigned upload URL, where the SDK's own headers would break the signature.
+     */
+    public void sendRaw(String method, String url, Map<String, String> headers, byte[] body) {
+        Map<String, String> sent = headers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(headers);
+        HttpRequestData request = new HttpRequestData(method, url, sent, body);
+        HttpResponseData response;
+        try {
+            response = transport.send(request);
+        } catch (IOException e) {
+            throw new FoPostException("fopost: request to " + url + " failed: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new FoPostException("fopost: request to " + url + " was interrupted", e);
+        }
+        if (response.status() < 200 || response.status() >= 300) {
+            throw errorFor(response.status(), null, "HTTP " + response.status(), retryAfter(response));
+        }
+    }
+
     // ─── Decoding ─────────────────────────────────────────────────────────────
 
     private JsonNode decode(HttpResponseData response) {
