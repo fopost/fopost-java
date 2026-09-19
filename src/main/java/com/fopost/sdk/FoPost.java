@@ -7,9 +7,11 @@ import com.fopost.sdk.internal.Sleeper;
 import com.fopost.sdk.internal.Transport;
 import com.fopost.sdk.internal.Version;
 import com.fopost.sdk.resource.AccountsResource;
+import com.fopost.sdk.resource.AdsResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
+import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
@@ -61,6 +63,8 @@ public final class FoPost {
     private final AutomationsResource automations;
     private final MediaResource media;
     private final AiResource ai;
+    private final InboxResource inbox;
+    private final AdsResource ads;
 
     private FoPost(ApiClient http) {
         this.http = http;
@@ -73,6 +77,8 @@ public final class FoPost {
         this.automations = new AutomationsResource(http);
         this.media = new MediaResource(http);
         this.ai = new AiResource(http);
+        this.inbox = new InboxResource(http);
+        this.ads = new AdsResource(http);
     }
 
     /** A client reading its key from {@code FOPOST_API_KEY}. */
@@ -122,6 +128,14 @@ public final class FoPost {
 
     public AiResource ai() {
         return ai;
+    }
+
+    public InboxResource inbox() {
+        return inbox;
+    }
+
+    public AdsResource ads() {
+        return ads;
     }
 
     public String baseUrl() {
