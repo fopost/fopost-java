@@ -56,11 +56,12 @@ src/main/java/com/fopost/sdk/
     Multipart.java         multipart body builder, used by media upload
     Sleeper.java           @FunctionalInterface test seam for the retry wait
     Version.java           the version compiled into the User-Agent
-  model/                   ~55 response records (Post, Account, Workspace, Page, PageMeta, …)
+  model/                   ~85 response records (Post, Account, Workspace, Page, PageMeta, InboxItem, Ad, …)
   param/                   request builders (CreatePostParams, PostListParams, …)
   resource/                PostsResource, AccountsResource (+ .communities()), WorkspacesResource,
                            LabelsResource, WebhooksResource, AnalyticsResource,
-                           AutomationsResource, MediaResource, AiResource, CommunitiesResource
+                           AutomationsResource, MediaResource, AiResource, CommunitiesResource,
+                           InboxResource, AdsResource
 ```
 
 **Request flow.** `client.posts().create(params)` → `PostsResource` builds the body and calls
@@ -79,8 +80,18 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`. This is the most complete of the
-FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for anything unwrapped.
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `ads`. This is the most
+complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
+anything unwrapped.
+
+- `inbox` (scope `inbox`) covers `/v1/inbox/*` except `/v1/inbox/chat/*` (browser-encrypted X
+  Chat) and `/v1/inbox/{id}/attachments/{index}` (a binary stream; this SDK has no download
+  pattern). Its lists carry `meta: { page, perPage, total }`, mapped by `model/InboxPage` +
+  `InboxPageMeta`, not the `PageMeta` the other lists use. `POST /inbox/read` and `/inbox/refresh`
+  take snake_case bodies; `PATCH /inbox/{id}` takes `{ state, snoozedUntil }`.
+- `ads` (scope `ads`) covers `/v1/ads/*`. Request bodies are camelCase; `boost`, `create`,
+  `setStatus` and `delete` also need the `publish` scope, and a boost or ad starts paused unless
+  `paused` is false. Say both in the javadoc of anything new that spends.
 
 ## API Contract
 
@@ -184,8 +195,7 @@ First publish also requires, outside GitHub:
    unsigned artifacts.
 4. The `central` environment created in GitHub repo settings (it gates who can trigger a release).
 
-This repo has **no `CHANGELOG.md`**, which the sibling Ruby SDK carries. Add one before the first
-release rather than after.
+`CHANGELOG.md` follows Keep a Changelog; add an entry under the new version with every release.
 
 ## Git
 

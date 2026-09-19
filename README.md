@@ -106,6 +106,8 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `upload`, `delete`                                                                                                                                                                   |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
+| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `reply`, `hide`, `unhide`, `delete`, `listApprovals`, `approveReply`, `rejectReply` |
+| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `audiences`, `createAudience`, `searchTargeting`, `leadForms`, `createLeadForm`, `leads` |
 
 `accounts().communities()` covers the X communities an account can post into: `list`, `sync`,
 `search`, `add`, `remove`.
@@ -157,6 +159,50 @@ CaptionResult caption = client.ai().generateCaption(CaptionParams.create()
 > **API keys reach `credits` and `generateCaption`.** `rewrite` and `repurposeUrl` currently
 > require a signed-in dashboard session and answer `401` to an API key. They are here so the
 > surface is complete once the server opens them up.
+
+## Inbox
+
+Comments, mentions and direct messages across the connected accounts, with the state of each
+(`unread`, `read`, `resolved`, `snoozed`). Lists are pages with `page`, `perPage` and `total`.
+
+```java
+InboxPage<InboxItem> unread = client.inbox().list(
+        InboxListParams.create().workspaceId(workspace.id()).state("unread"));
+
+for (InboxItem item : unread) {
+    if (Boolean.TRUE.equals(item.canReply())) {
+        client.inbox().reply(item.id(), "Thanks for asking, sent you a DM.");
+    }
+}
+
+client.inbox().markThreadRead(workspace.id(), accountId, postExternalId);
+client.inbox().update(itemId, "snoozed", Instant.parse("2026-09-02T09:00:00Z"));
+```
+
+`threads` groups comments per platform post (`kind("mentions")` for posts the account was tagged
+in) and `conversations` per DM thread. `listApprovals` returns replies an automation or the agent
+drafted that a person still has to send; `approveReply` sends the draft (or your edited text) and
+`rejectReply` discards it.
+
+## Ads
+
+Boosts, standalone ads, audiences and lead forms on the connected ad accounts.
+
+```java
+BoostablePost candidate = client.ads().boostable(workspace.id()).get(0);
+
+Ad boost = client.ads().boost(BoostPostParams.of(
+        workspace.id(), connectionId, "act_123",
+        candidate.id(), candidate.deliveries().get(0).accountId(),
+        "Launch week", "engagement",
+        AdBudgetParams.daily(2000),
+        AdTargetingParams.create(List.of("US"), 21, 45, "all")));
+
+client.ads().setStatus(boost.id(), workspace.id(), "active");
+```
+
+A boost or ad starts paused unless `paused(false)` is set, so nothing is spent until it is
+resumed. `boost`, `create`, `setStatus` and `delete` need the `publish` scope as well as `ads`.
 
 ## Configuration
 
@@ -212,7 +258,8 @@ read endpoints keep working without one.
 
 An API key carries only the scopes granted when it was created, and every request is confined to
 the workspaces that key can reach. `posts` also covers publishing, deliveries, and media; the rest
-are `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, and `automations`.
+are `workspaces`, `accounts`, `labels`, `webhooks`, `analytics`, `automations`, `inbox`, and `ads`.
+The ads calls that spend money (`boost`, `create`, `setStatus`, `delete`) need `publish` too.
 
 ## Example
 
