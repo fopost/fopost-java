@@ -103,7 +103,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                 |
-| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                     |
+| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
@@ -259,6 +259,53 @@ MediaValidation file = client.validate().media("https://cdn.example.test/chart.p
 
 Nothing is stored. `media` answers `200` with `ok` false when the file fails a check; an
 unreachable url throws `ValidationException`. All three need the `posts` scope.
+
+## Analytics
+
+```java
+// How long a post keeps earning, from the repeated readings of each post
+var decay = client.analytics().decay(AnalyticsParams.create().days(30));
+System.out.println(decay.halfLifeBucket()); // e.g. "1h_3h"
+
+// Whether posting more earned more
+var cadence = client.analytics().frequency(AnalyticsParams.create().days(90));
+if (cadence.best() != null) {
+    System.out.println(cadence.best().label()); // e.g. "3-5 a week"
+}
+
+// Every reading held for one post, with what moved between them
+var timeline = client.analytics().timeline(post.id());
+
+// Mirror the metrics into your own store, without refetching everything
+Instant cursor = null;
+while (true) {
+    var params = AnalyticsParams.create();
+    if (cursor != null) {
+        params.since(cursor);
+    }
+    var page = client.analytics().changes(params);
+    save(page.changes());
+    if (!Boolean.TRUE.equals(page.hasMore()) || page.cursor() == null) {
+        break;
+    }
+    cursor = page.cursor();
+}
+
+// Refresh one post now instead of waiting for the next collection run
+client.analytics().collectPost(post.id());
+
+// Posts on the account that never went out through FoPost
+for (var native : client.analytics().nativePosts(accounts.get(0).id())) {
+    System.out.println(native.permalink() + " " + native.metrics().engagements());
+}
+```
+
+A post is addressed by its FoPost id or by its permalink, so a post made by
+hand on the network works the same way:
+
+```java
+client.analytics().timeline("https://x.com/acme/status/1");
+```
 
 ## Configuration
 

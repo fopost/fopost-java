@@ -1,5 +1,6 @@
 package com.fopost.sdk.param;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,6 +23,8 @@ public final class AnalyticsParams {
     private String sort;
     private String label;
     private String audience;
+    private String since;
+    private Integer perPage;
 
     public static AnalyticsParams create() {
         return new AnalyticsParams();
@@ -81,6 +84,24 @@ public final class AnalyticsParams {
         return this;
     }
 
+    /** Changes feed only: return readings recorded after this instant, as ISO 8601. */
+    public AnalyticsParams since(String since) {
+        this.since = since;
+        return this;
+    }
+
+    /** Changes feed only, as an instant. */
+    public AnalyticsParams since(Instant since) {
+        this.since = since == null ? null : since.toString();
+        return this;
+    }
+
+    /** Native posts only: page size, since that endpoint reads {@code per_page}. */
+    public AnalyticsParams perPage(int perPage) {
+        this.perPage = perPage;
+        return this;
+    }
+
     public Map<String, Object> toQuery() {
         Map<String, Object> query = new LinkedHashMap<>();
         Params.put(query, "accountId", accountId);
@@ -93,6 +114,8 @@ public final class AnalyticsParams {
         Params.put(query, "sort", sort);
         Params.put(query, "label", label);
         Params.put(query, "audience", audience);
+        Params.put(query, "since", since);
+        Params.put(query, "per_page", perPage);
         return query;
     }
 }
