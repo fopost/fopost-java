@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
+  `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
+  account answers 409 `webhook_connection`.
+
 ## [0.3.0] - 2026-09-19
 
 ### Added
