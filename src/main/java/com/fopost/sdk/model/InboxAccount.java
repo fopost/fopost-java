@@ -1,6 +1,9 @@
 package com.fopost.sdk.model;
 
-/** A connected account, flagged with whether comments and DMs can be read for it yet. */
+/**
+ * A connected account, flagged with whether comments and DMs can be read for it yet.
+ * {@code canStartConversation} means a new DM can be opened from it by handle.
+ */
 public record InboxAccount(
         String id,
         String workspaceId,
@@ -11,4 +14,5 @@ public record InboxAccount(
         Boolean inboxSupported,
         String pendingReason,
         Boolean dmSupported,
-        String dmPendingReason) {}
+        String dmPendingReason,
+        Boolean canStartConversation) {}

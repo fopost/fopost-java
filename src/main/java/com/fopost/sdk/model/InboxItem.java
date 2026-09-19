@@ -7,8 +7,10 @@ import java.util.List;
  * A comment, mention or direct message on a connected account.
  *
  * <p>{@code type} is comment, mention or dm; {@code state} is unread, read, resolved or snoozed.
- * {@code canReply}, {@code canHide} and {@code canDelete} say which actions the platform allows on
- * it.
+ * The {@code can*} flags say which actions the platform allows on it. {@code canDelete} covers a
+ * comment someone left or our own reply; {@code canPin} and {@code canEdit} are our own comments
+ * only; {@code canPrivateReply} means a DM can be opened from it with
+ * {@code StartConversationParams.privateReply}. {@code reaction} is our reaction on a DM.
  */
 public record InboxItem(
         String id,
@@ -34,6 +36,17 @@ public record InboxItem(
         Boolean hidden,
         Boolean canHide,
         Boolean canDelete,
+        Boolean liked,
+        Boolean pinned,
+        String reaction,
+        Instant editedAt,
+        Boolean canLike,
+        Boolean canPin,
+        Boolean canEdit,
+        Boolean canReact,
+        Boolean canSendMedia,
+        Boolean canQuickReply,
+        Boolean canPrivateReply,
         PostRef post,
         InboxPostContext postContext,
         InboxAccountRef account) {}
