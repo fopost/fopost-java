@@ -33,5 +33,6 @@ public record Ad(
         Instant createdAt) {
 
     /** The creative of a standalone ad. Null on a boost. */
-    public record Creative(String text, String headline, String destinationUrl, String mediaUrl) {}
+    public record Creative(
+            String text, String headline, String destinationUrl, String mediaUrl, String urlTags) {}
 }

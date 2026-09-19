@@ -55,6 +55,12 @@ public final class CreateAdParams {
         return this;
     }
 
+    /** A query string appended to every link in the ad, e.g. {@code utm_source=meta&utm_medium=paid}. */
+    public CreateAdParams urlTags(String urlTags) {
+        body.put("urlTags", urlTags);
+        return this;
+    }
+
     /** False starts delivery at once. Defaults to true, so nothing is spent until resumed. */
     public CreateAdParams paused(boolean paused) {
         body.put("paused", paused);
