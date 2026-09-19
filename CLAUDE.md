@@ -13,7 +13,7 @@ exception per error status.
   sources and javadoc.
 - Runtime dependencies: `jackson-databind` and `jackson-datatype-jsr310` (2.18.2). HTTP is the
   JDK's own `java.net.http.HttpClient` — no HTTP library dependency.
-- Version `0.1.0` in `pom.xml`, mirrored by the constant in
+- Version `0.2.0` in `pom.xml`, mirrored by the constant in
   `src/main/java/com/fopost/sdk/internal/Version.java` (the release workflow enforces the match).
 
 ## Downstream Packages
@@ -134,7 +134,7 @@ anything unwrapped.
 mvn -B verify                        # compile, test, sources jar, javadoc jar — what CI runs
 mvn -B test                          # tests only
 mvn -B test -Dtest=RetryTest         # one test class
-mvn -q install -DskipTests           # install 0.1.0 locally, so ../fopost-spring can resolve it
+mvn -q install -DskipTests           # install 0.2.0 locally, so ../fopost-spring can resolve it
 mvn -B -Prelease deploy -DskipTests  # GPG-sign and publish to Central (release workflow only)
 ```
 

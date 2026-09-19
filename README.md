@@ -9,12 +9,12 @@ Official Java SDK for the [FoPost](https://fopost.com) API. Schedule and publish
 <dependency>
   <groupId>com.fopost</groupId>
   <artifactId>fopost-java</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.fopost:fopost-java:0.1.0")
+implementation("com.fopost:fopost-java:0.2.0")
 ```
 
 Requires Java 17 or newer. HTTP goes through the JDK's own client; the only dependency is Jackson.
