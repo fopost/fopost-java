@@ -17,6 +17,7 @@ import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.KnowledgeResource;
+import com.fopost.sdk.resource.GoogleBusinessResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
@@ -76,6 +77,7 @@ public final class FoPost {
     private final BroadcastsResource broadcasts;
     private final SequencesResource sequences;
     private final ActivityResource activity;
+    private final GoogleBusinessResource googleBusiness;
     private final InboxResource inbox;
     private final AdsResource ads;
     private final ValidateResource validate;
@@ -83,6 +85,7 @@ public final class FoPost {
     private FoPost(ApiClient http) {
         this.http = http;
         this.posts = new PostsResource(http);
+        this.googleBusiness = new GoogleBusinessResource(http);
         this.accounts = new AccountsResource(http);
         this.accountGroups = new AccountGroupsResource(http);
         this.workspaces = new WorkspacesResource(http);
@@ -162,6 +165,11 @@ public final class FoPost {
 
     public AiResource ai() {
         return ai;
+    }
+
+    /** Manage a connected Google Business Profile location. */
+    public GoogleBusinessResource googleBusiness() {
+        return googleBusiness;
     }
 
     public InboxResource inbox() {
