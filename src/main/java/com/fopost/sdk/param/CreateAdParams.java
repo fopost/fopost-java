@@ -39,6 +39,17 @@ public final class CreateAdParams {
         return params;
     }
 
+    /**
+     * Run a post already live on the network as a Spark ad, from
+     * {@code ads().sparkPosts(...)}. The post carries its own caption and
+     * media, so {@code text}, {@code headline} and {@code mediaUrl} are
+     * ignored. Needs the network's {@code sparkAds} capability.
+     */
+    public CreateAdParams sparkPostId(String sparkPostId) {
+        body.put("sparkPostId", sparkPostId);
+        return this;
+    }
+
     public CreateAdParams headline(String headline) {
         body.put("headline", headline);
         return this;

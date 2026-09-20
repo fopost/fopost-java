@@ -3,9 +3,12 @@ package com.fopost.sdk.resource;
 import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.model.Ad;
 import com.fopost.sdk.model.AdAccountTree;
+import com.fopost.sdk.model.AdBusinessCenter;
 import com.fopost.sdk.model.AdCampaign;
+import com.fopost.sdk.model.AdCommentsPage;
 import com.fopost.sdk.model.AdConnection;
 import com.fopost.sdk.model.AdCreative;
+import com.fopost.sdk.model.AdIdentity;
 import com.fopost.sdk.model.AdInsightsReport;
 import com.fopost.sdk.model.AdSet;
 import com.fopost.sdk.model.AdSource;
@@ -23,6 +26,7 @@ import com.fopost.sdk.model.LeadsFeed;
 import com.fopost.sdk.model.LeadsPage;
 import com.fopost.sdk.model.NetworkAd;
 import com.fopost.sdk.model.ReachEstimate;
+import com.fopost.sdk.model.SparkPost;
 import com.fopost.sdk.model.TargetingOption;
 import com.fopost.sdk.param.AdInsightsParams;
 import com.fopost.sdk.param.BoostPostParams;
@@ -38,6 +42,7 @@ import com.fopost.sdk.param.LeadsFeedParams;
 import com.fopost.sdk.param.ReachEstimateParams;
 import com.fopost.sdk.param.UpdateAdCampaignParams;
 import com.fopost.sdk.param.UpdateAdSetParams;
+import com.fopost.sdk.param.UploadConversionsParams;
 import com.fopost.sdk.param.UpdateAudienceParams;
 import com.fopost.sdk.param.UpdateNetworkAdParams;
 import java.util.LinkedHashMap;
@@ -477,6 +482,107 @@ public final class AdsResource {
         }
         return http.convertList(
                 ApiClient.unwrap(http.get("/v1/ads/targeting/search", query)), TargetingOption.class);
+    }
+
+    // ─── Identities, Spark posts, conversions and ad comments ─────────────────
+
+    public List<AdBusinessCenter> tiktokBusinessCenters(String connectionId) {
+        return tiktokBusinessCenters(connectionId, null);
+    }
+
+    /**
+     * TikTok's Business Centers. The one network-named read on this resource,
+     * because no other network groups ad accounts this way.
+     */
+    public List<AdBusinessCenter> tiktokBusinessCenters(String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/tiktok/business-centers", connectionQuery(workspaceId, connectionId))),
+                AdBusinessCenter.class);
+    }
+
+    public List<AdIdentity> tiktokIdentities(String connectionId, String adAccountId) {
+        return tiktokIdentities(connectionId, adAccountId, null);
+    }
+
+    /** The accounts an ad can run as; an identity id is a {@code pageId}. */
+    public List<AdIdentity> tiktokIdentities(String connectionId, String adAccountId, String workspaceId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("ad_account_id", adAccountId);
+        return http.convertList(ApiClient.unwrap(http.get("/v1/ads/tiktok/identities", query)), AdIdentity.class);
+    }
+
+    public List<SparkPost> sparkPosts(String connectionId, String adAccountId, String identityId) {
+        return sparkPosts(connectionId, adAccountId, identityId, null);
+    }
+
+    /** Posts already live under an identity, each a candidate Spark ad. */
+    public List<SparkPost> sparkPosts(
+            String connectionId, String adAccountId, String identityId, String workspaceId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("ad_account_id", adAccountId);
+        query.put("identity_id", identityId);
+        return http.convertList(ApiClient.unwrap(http.get("/v1/ads/spark-posts", query)), SparkPost.class);
+    }
+
+    /**
+     * Offline conversions against a pixel the ad account owns. Identifiers are
+     * hashed before anything leaves FoPost. Returns how many the network took.
+     */
+    public long uploadConversions(UploadConversionsParams params) {
+        return ApiClient.unwrap(http.post("/v1/ads/conversions", params.toMap()))
+                .path("accepted")
+                .asLong();
+    }
+
+    public AdCommentsPage comments(String connectionId, String adId) {
+        return comments(connectionId, adId, null, null);
+    }
+
+    /** One page of an ad's comments; pass {@code nextCursor} back as {@code after}. */
+    public AdCommentsPage comments(String connectionId, String adId, String after, String workspaceId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("ad_id", adId);
+        if (after != null) {
+            query.put("after", after);
+        }
+        return http.convert(ApiClient.unwrap(http.get("/v1/ads/comments", query)), AdCommentsPage.class);
+    }
+
+    /**
+     * Answer a comment on an ad; returns the reply's id on the network. Needs
+     * the {@code publish} scope as well as {@code ads}.
+     */
+    public String replyToComment(
+            String commentId, String workspaceId, String connectionId, String adId, String text) {
+        Map<String, Object> body = commentBody(workspaceId, connectionId, adId);
+        body.put("text", text);
+        return ApiClient.unwrap(http.post("/v1/ads/comments/" + commentId + "/reply", body))
+                .path("replyId")
+                .asText();
+    }
+
+    /** Needs the {@code publish} scope as well as {@code ads}. */
+    public void setCommentHidden(
+            String commentId, String workspaceId, String connectionId, String adId, boolean hidden) {
+        Map<String, Object> body = commentBody(workspaceId, connectionId, adId);
+        body.put("hidden", hidden);
+        http.post("/v1/ads/comments/" + commentId + "/hide", body);
+    }
+
+    /**
+     * One already gone on the network succeeds. Needs the {@code publish} scope
+     * as well as {@code ads}.
+     */
+    public void deleteComment(String commentId, String workspaceId, String connectionId, String adId) {
+        http.request("DELETE", "/v1/ads/comments/" + commentId, commentBody(workspaceId, connectionId, adId), null);
+    }
+
+    private static Map<String, Object> commentBody(String workspaceId, String connectionId, String adId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspaceId", workspaceId);
+        body.put("connectionId", connectionId);
+        body.put("adId", adId);
+        return body;
     }
 
     // ─── Lead forms ───────────────────────────────────────────────────────────

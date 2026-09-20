@@ -30,6 +30,15 @@ public final class CreateAdCampaignParams {
         return this;
     }
 
+    /**
+     * Hands targeting and creative rotation to the network. Needs its
+     * {@code smartPlus} capability.
+     */
+    public CreateAdCampaignParams smartPlus(boolean smartPlus) {
+        body.put("smartPlus", smartPlus);
+        return this;
+    }
+
     public Map<String, Object> toMap() {
         return new LinkedHashMap<>(body);
     }
