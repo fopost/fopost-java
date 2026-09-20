@@ -19,7 +19,7 @@ class DiscordTest {
     void listChannelsAndSwitchTheCurrentOne() {
         FakeTransport transport = new FakeTransport()
                 .enqueue(200, """
-                        {"data":[{"id":"c2","name":"launches","type":0,"parent_id":null,"nsfw":false,"is_current":true}]}""")
+                        {"data":[{"id":"c2","name":"launches","type":0,"parent_id":null,"nsfw":false,"can_post":true,"is_current":true}]}""")
                 .enqueue(200, "{\"data\":{\"id\":\"c2\",\"name\":\"launches\",\"is_current\":true}}");
         FoPost client = TestSupport.client(transport);
 
