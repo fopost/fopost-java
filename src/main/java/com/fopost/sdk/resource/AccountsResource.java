@@ -18,6 +18,12 @@ import com.fopost.sdk.model.DiscordMessageRef;
 import com.fopost.sdk.model.DiscordRole;
 import com.fopost.sdk.model.DiscordScheduledEvent;
 import com.fopost.sdk.model.DiscordThread;
+import com.fopost.sdk.model.MetaGreeting;
+import com.fopost.sdk.model.MetaGreetingText;
+import com.fopost.sdk.model.MetaIceBreaker;
+import com.fopost.sdk.model.MetaIceBreakers;
+import com.fopost.sdk.model.MetaPersistentMenu;
+import com.fopost.sdk.model.MetaPersistentMenuEntry;
 import com.fopost.sdk.model.SlackChannel;
 import com.fopost.sdk.model.SlackIdentity;
 import com.fopost.sdk.model.SlackMember;
@@ -26,6 +32,7 @@ import com.fopost.sdk.model.TelegramBotCommands;
 import com.fopost.sdk.model.TelegramConnectCode;
 import com.fopost.sdk.model.TelegramConnectStatus;
 import com.fopost.sdk.model.TokenRefresh;
+import com.fopost.sdk.model.WebhookSubscription;
 import com.fopost.sdk.param.CreateAccountParams;
 import com.fopost.sdk.param.DiscordEventParams;
 import com.fopost.sdk.param.DiscordRoleParams;
@@ -245,6 +252,90 @@ public final class AccountsResource {
                 SlackIdentity.class);
     }
 
+    // ─── Meta messaging settings (Facebook Pages, Instagram) ─────────
+
+    /** The prompts shown before the first message. A network without them answers 400. */
+    public MetaIceBreakers getIceBreakers(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/messaging/ice-breakers", null)),
+                MetaIceBreakers.class);
+    }
+
+    /** Replace the ice breakers, up to four. */
+    public MetaIceBreakers setIceBreakers(String accountId, List<MetaIceBreaker> iceBreakers) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("ice_breakers", iceBreakers);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/messaging/ice-breakers", body)),
+                MetaIceBreakers.class);
+    }
+
+    /** Clear the ice breakers. */
+    public MetaIceBreakers deleteIceBreakers(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/messaging/ice-breakers")),
+                MetaIceBreakers.class);
+    }
+
+    /** The always-visible Messenger menu. Facebook Pages only; other networks answer 400. */
+    public MetaPersistentMenu getPersistentMenu(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/messaging/persistent-menu", null)),
+                MetaPersistentMenu.class);
+    }
+
+    /** Replace the menu, one entry per locale, up to three items each. */
+    public MetaPersistentMenu setPersistentMenu(String accountId, List<MetaPersistentMenuEntry> menu) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("persistent_menu", menu);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/messaging/persistent-menu", body)),
+                MetaPersistentMenu.class);
+    }
+
+    /** Clear the menu. */
+    public MetaPersistentMenu deletePersistentMenu(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/messaging/persistent-menu")),
+                MetaPersistentMenu.class);
+    }
+
+    /** The text shown before a Messenger conversation starts. Facebook Pages only. */
+    public MetaGreeting getGreeting(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/messaging/greeting", null)),
+                MetaGreeting.class);
+    }
+
+    /** Replace the greeting, one entry per locale, each up to 160 characters. */
+    public MetaGreeting setGreeting(String accountId, List<MetaGreetingText> greeting) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("greeting", greeting);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/messaging/greeting", body)),
+                MetaGreeting.class);
+    }
+
+    /** Clear the greeting. */
+    public MetaGreeting deleteGreeting(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.delete("/v1/accounts/" + accountId + "/messaging/greeting")),
+                MetaGreeting.class);
+    }
+
+    /** What the network is delivering to the FoPost webhook for this account. */
+    public WebhookSubscription getWebhookSubscription(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/webhook-subscription", null)),
+                WebhookSubscription.class);
+    }
+
+    /** Subscribe to every field this account needs, lapsed or not. */
+    public WebhookSubscription resubscribeWebhook(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/" + accountId + "/webhook-subscription", null)),
+                WebhookSubscription.class);
+    }
 
     // ── Discord (bot connections) ───────────────────────────────────────
 
