@@ -8,6 +8,13 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `contacts()`: the people behind the inbox. `list`, `get`, `create`, `update`, `delete`,
+  `conversations` (the threads one person appears in), `importCsv`, and
+  `listFields`/`createField`/`updateField`/`updateFieldOptions`/`deleteField` for the
+  custom columns a workspace keeps. All need the `inbox` scope.
+- `contacts().conversationAnalytics` reads `/v1/analytics/inbox/conversations`: volume and
+  median reply time per thread. Needs the `analytics` scope.
+
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.

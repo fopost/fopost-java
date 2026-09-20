@@ -108,6 +108,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
+| `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
@@ -203,6 +204,45 @@ The actions that act on the platform as the account also need the `publish` scop
 `unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, a `reply` with
 `InboxReplyParams` carrying `mediaIds` or `quickReplies`, and deleting our own reply. Each works only
 where the item's matching `can*` flag is true.
+
+## Contacts
+
+The people behind the inbox: one person however many handles they write from. An inbound item files its author, a reply files whoever you answered, and both fold into whatever is already on file. Needs the `inbox` scope.
+
+```java
+ContactPage page = client.contacts().list(
+        ContactParams.Filter.create().workspace(workspaceId).search("ada"));
+for (Contact contact : page) {
+    System.out.println(contact.displayName() + " — " + contact.channels().size() + " handles");
+}
+
+// Folds into whoever already holds the first channel, so this cannot duplicate someone.
+Contact contact = client.contacts().create(
+        ContactParams.Create.of(workspaceId, List.of(ContactChannel.of("x", "ada_writes")))
+                .displayName("Ada Okafor")
+                .fields(Map.of("plan_tier", "Pro")));
+
+client.contacts().update(contact.id(), ContactParams.Update.create().clearField("region"));
+client.contacts().delete(contact.id());   // the messages stay in the inbox
+
+// The threads this person appears in, newest first.
+for (ContactConversation thread : client.contacts().conversations(contact.id())) {
+    System.out.println(thread.platform() + " " + thread.messages() + " messages");
+}
+
+// platform and handle are required columns; any other column is a custom field key.
+ContactImportResult result = client.contacts().importCsv(workspaceId, "platform,handle\nx,ada_writes");
+System.out.println(result.created() + " created, " + result.merged() + " merged");
+
+// The columns your workspace keeps.
+ContactField field = client.contacts()
+        .createField(workspaceId, "plan_tier", "Plan Tier", "select", List.of("Free", "Pro"));
+client.contacts().deleteField(field.id());   // removes every answer to it
+
+// Volume and median reply time per thread. Needs the `analytics` scope.
+ConversationAnalytics report = client.contacts()
+        .conversationAnalytics(ContactParams.Conversations.create().days(30).sort("slowest"));
+```
 
 ## Ads
 

@@ -12,6 +12,7 @@ import com.fopost.sdk.resource.AdsResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
+import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
@@ -66,6 +67,7 @@ public final class FoPost {
     private final AutomationsResource automations;
     private final MediaResource media;
     private final AiResource ai;
+    private final ContactsResource contacts;
     private final InboxResource inbox;
     private final AdsResource ads;
     private final ValidateResource validate;
@@ -83,6 +85,7 @@ public final class FoPost {
         this.media = new MediaResource(http);
         this.ai = new AiResource(http);
         this.inbox = new InboxResource(http);
+        this.contacts = new ContactsResource(http);
         this.ads = new AdsResource(http);
         this.validate = new ValidateResource(http);
     }
@@ -142,6 +145,11 @@ public final class FoPost {
 
     public InboxResource inbox() {
         return inbox;
+    }
+
+    /** The people behind the inbox, and the fields kept about them. */
+    public ContactsResource contacts() {
+        return contacts;
     }
 
     public AdsResource ads() {
