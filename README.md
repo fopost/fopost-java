@@ -109,6 +109,8 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
 | `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
+| `broadcasts()`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
+| `sequences()`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
@@ -120,6 +122,41 @@ the decoded body:
 
 ```java
 JsonNode body = client.request("GET", "/v1/analytics/overview", null, Map.of("days", 30));
+```
+
+## Broadcasts and sequences
+
+A broadcast is one message into every conversation you already have with a segment of your contacts; a sequence is a series of them on a delay. Neither opens a cold DM.
+
+Nothing is sent into a closed messaging window: Messenger and Instagram take a business-initiated message only within 24 hours of the contact's last one, so recipients outside it come back skipped with `window_closed` rather than attempted. Telegram, Slack, Bluesky and Reddit have no window. The number sent is therefore often lower than the audience, and that is correct rather than a failure.
+
+Reading needs the `inbox` scope; `send`, `cancel`, `enroll` and `unenroll` also need `publish`.
+
+```java
+Broadcast broadcast = client.broadcasts().create(
+        BroadcastParams.Create.of(workspaceId, accountId, "September check-in",
+                        "New colours just landed. Want a look?")
+                .audience(AudienceFilter.all().platforms("instagram")));
+
+// recipients() on the result is how many contacts matched, not how many will be messaged.
+BroadcastSent sent = client.broadcasts().send(broadcast.id());
+
+// Who was skipped, and why.
+for (BroadcastRecipient r : client.broadcasts()
+        .recipients(broadcast.id(), BroadcastParams.Recipients.create().status("skipped"))) {
+    System.out.println(r.displayName() + ": " + r.skipReason());
+}
+
+Sequence sequence = client.sequences().create(
+        BroadcastParams.CreateSequence.of(workspaceId, accountId, "Welcome", List.of(
+                SequenceStep.of(0, "Thanks for the follow — anything I can help with?"),
+                SequenceStep.of(48, "Here is what people usually ask us first."))));
+
+// By id, or by the same audience filter a broadcast takes.
+client.sequences().enroll(sequence.id(), BroadcastParams.Enroll.contacts(List.of(contactId)));
+
+// Nothing further fires for them.
+client.sequences().unenroll(sequence.id(), List.of(contactId));
 ```
 
 ## Media

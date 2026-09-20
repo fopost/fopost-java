@@ -12,11 +12,13 @@ import com.fopost.sdk.resource.AdsResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
+import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
+import com.fopost.sdk.resource.SequencesResource;
 import com.fopost.sdk.resource.ValidateResource;
 import com.fopost.sdk.resource.WebhooksResource;
 import com.fopost.sdk.resource.WorkspacesResource;
@@ -68,6 +70,8 @@ public final class FoPost {
     private final MediaResource media;
     private final AiResource ai;
     private final ContactsResource contacts;
+    private final BroadcastsResource broadcasts;
+    private final SequencesResource sequences;
     private final InboxResource inbox;
     private final AdsResource ads;
     private final ValidateResource validate;
@@ -86,6 +90,8 @@ public final class FoPost {
         this.ai = new AiResource(http);
         this.inbox = new InboxResource(http);
         this.contacts = new ContactsResource(http);
+        this.broadcasts = new BroadcastsResource(http);
+        this.sequences = new SequencesResource(http);
         this.ads = new AdsResource(http);
         this.validate = new ValidateResource(http);
     }
@@ -150,6 +156,19 @@ public final class FoPost {
     /** The people behind the inbox, and the fields kept about them. */
     public ContactsResource contacts() {
         return contacts;
+    }
+
+    /**
+     * One message into every conversation the workspace already has with a segment of its
+     * contacts.
+     */
+    public BroadcastsResource broadcasts() {
+        return broadcasts;
+    }
+
+    /** A series of messages on a delay, walked per enrolled contact. */
+    public SequencesResource sequences() {
+        return sequences;
     }
 
     public AdsResource ads() {

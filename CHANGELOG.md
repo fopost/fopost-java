@@ -8,6 +8,16 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `broadcasts()`: one message into every conversation the workspace already has with a
+  segment of its contacts. `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`
+  and `recipients`. Reading needs the `inbox` scope; `send` and `cancel` also need `publish`.
+- `sequences()`: a series of messages on a delay. `list`, `get`, `create`, `update`,
+  `delete`, `enroll`, `unenroll` and `enrollments`. `enroll` and `unenroll` need `publish`.
+- Both honour each network's messaging window server-side. Messenger and Instagram take a
+  business-initiated message only within 24 hours of the contact's last one, so recipients
+  outside it come back `skipped` with `skip_reason` `window_closed` and nothing is
+  attempted — the number sent is often lower than the audience.
+
 - `contacts()`: the people behind the inbox. `list`, `get`, `create`, `update`, `delete`,
   `conversations` (the threads one person appears in), `importCsv`, and
   `listFields`/`createField`/`updateField`/`updateFieldOptions`/`deleteField` for the
