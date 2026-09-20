@@ -16,6 +16,13 @@ All notable changes to this project are documented here. The format follows
   for an account, and `resubscribeWebhook` puts a lapsed subscription back.
 - `inbox().passThreadControl`, `takeThreadControl` and `handover` move a Messenger thread
   between Meta apps (`inbox` scope, plus `publish`).
+- `knowledge()`: the workspace knowledge base — `list`, `create` (plus the
+  `createText`, `createUrl` and `createFile` shorthands), `update`, `delete`,
+  `sync` and `search`, with the `KnowledgeSource` and `KnowledgeMatch` records.
+  A source is an FAQ, a note, a URL on your own site or a plain-text/CSV media
+  item; `search` returns the passages closest to a question, and is what grounds
+  a drafted inbox reply in your own answers. Needs the `inbox` scope.
+
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.

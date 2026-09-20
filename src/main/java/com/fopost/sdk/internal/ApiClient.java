@@ -76,6 +76,10 @@ public final class ApiClient {
         return request("PUT", path, body, null);
     }
 
+    public JsonNode patch(String path, Object body) {
+        return request("PATCH", path, body, null);
+    }
+
     public JsonNode delete(String path) {
         return request("DELETE", path, null, null);
     }
