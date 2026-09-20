@@ -13,6 +13,7 @@ import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
 import com.fopost.sdk.resource.InboxResource;
+import com.fopost.sdk.resource.KnowledgeResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
@@ -60,6 +61,7 @@ public final class FoPost {
     private final AccountsResource accounts;
     private final AccountGroupsResource accountGroups;
     private final WorkspacesResource workspaces;
+    private final KnowledgeResource knowledge;
     private final LabelsResource labels;
     private final WebhooksResource webhooks;
     private final AnalyticsResource analytics;
@@ -76,6 +78,7 @@ public final class FoPost {
         this.accounts = new AccountsResource(http);
         this.accountGroups = new AccountGroupsResource(http);
         this.workspaces = new WorkspacesResource(http);
+        this.knowledge = new KnowledgeResource(http);
         this.labels = new LabelsResource(http);
         this.webhooks = new WebhooksResource(http);
         this.analytics = new AnalyticsResource(http);
@@ -114,6 +117,11 @@ public final class FoPost {
 
     public WorkspacesResource workspaces() {
         return workspaces;
+    }
+
+    /** The workspace knowledge base, which grounds drafted replies. */
+    public KnowledgeResource knowledge() {
+        return knowledge;
     }
 
     public LabelsResource labels() {
