@@ -125,16 +125,19 @@ public final class AdsResource {
 
     // ─── Connections ──────────────────────────────────────────────────────────
 
-    public String authorizeMeta(String workspaceId) {
-        return authorizeMeta(workspaceId, null, null);
+    /** Connects Meta, the default network. */
+    public String authorize(String workspaceId) {
+        return authorize(workspaceId, "meta", null, null);
     }
 
     /**
-     * The login url for connecting a Meta Ads account. The user who calls this must finish the
-     * login in their own browser session. {@code method} is business or user; {@code returnTo} is
-     * the dashboard path to land on afterwards.
+     * The login url for connecting an ad account. The user who calls this must finish the login in
+     * their own browser session. {@code provider} names the ad network and defaults to meta;
+     * {@code method} is the network's own login method, business or user on Meta; {@code returnTo}
+     * is the dashboard path to land on afterwards. A network that is not available on the
+     * deployment answers 503.
      */
-    public String authorizeMeta(String workspaceId, String method, String returnTo) {
+    public String authorize(String workspaceId, String provider, String method, String returnTo) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("workspaceId", workspaceId);
         if (method != null) {
@@ -143,7 +146,22 @@ public final class AdsResource {
         if (returnTo != null) {
             body.put("returnTo", returnTo);
         }
-        return ApiClient.unwrap(http.post("/v1/ads/connections/meta/authorize", body)).path("url").asText();
+        String network = provider == null || provider.isEmpty() ? "meta" : provider;
+        return ApiClient.unwrap(http.post("/v1/ads/connections/" + network + "/authorize", body))
+                .path("url")
+                .asText();
+    }
+
+    /** @deprecated use {@link #authorize(String)}, which takes a provider. */
+    @Deprecated
+    public String authorizeMeta(String workspaceId) {
+        return authorize(workspaceId);
+    }
+
+    /** @deprecated use {@link #authorize(String, String, String, String)}. */
+    @Deprecated
+    public String authorizeMeta(String workspaceId, String method, String returnTo) {
+        return authorize(workspaceId, "meta", method, returnTo);
     }
 
     /** Also deletes every ad record FoPost created through the connection. */

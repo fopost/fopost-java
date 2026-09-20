@@ -70,6 +70,22 @@ class AdsTest {
     }
 
     @Test
+    void authorizeNamesItsAdNetwork() {
+        FakeTransport transport = new FakeTransport()
+                .enqueue(200, "{\"data\":{\"url\":\"https://meta.test/login\"}}")
+                .enqueue(200, "{\"data\":{\"url\":\"https://pinterest.test/login\"}}");
+
+        FoPost client = TestSupport.client(transport);
+
+        assertEquals("https://meta.test/login", client.ads().authorize("w1"));
+        assertEquals("https://api.fopost.test/v1/ads/connections/meta/authorize", transport.last().url());
+
+        assertEquals("https://pinterest.test/login", client.ads().authorize("w1", "pinterest", null, null));
+        assertEquals(
+                "https://api.fopost.test/v1/ads/connections/pinterest/authorize", transport.last().url());
+    }
+
+    @Test
     void statusRefreshAndDeleteCarryTheWorkspaceInTheQuery() {
         FakeTransport transport = new FakeTransport()
                 .enqueue(200, "{\"data\":{\"id\":\"ad1\",\"status\":\"active\"}}")

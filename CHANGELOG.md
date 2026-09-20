@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `ads().authorize(workspaceId, provider, method, returnTo)` starts a connection on any
+  ad network the API lists, not only Meta. `authorizeMeta` delegates to it and is deprecated.
+
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.
