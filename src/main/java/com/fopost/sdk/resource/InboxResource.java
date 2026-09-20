@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Comments, mentions and direct messages on the connected accounts.
+ * Comments, mentions, reviews and direct messages on the connected accounts.
  *
  * <pre>{@code
  * InboxPage<InboxItem> unread = client.inbox().list(
@@ -67,8 +67,9 @@ public final class InboxResource {
     }
 
     /**
-     * One row per platform post that has collected comments, or per post the account was tagged
-     * in with {@code kind("mentions")}. Fetch a thread's items with {@link #list} filtered by
+     * One row per platform post that has collected comments, per post the account was tagged in
+     * with {@code kind("mentions")}, or per review with {@code kind("reviews")}. Fetch a thread's
+     * items with {@link #list} filtered by
      * {@code accountId} and {@code postExternalId}.
      */
     public InboxPage<InboxThread> threads(InboxThreadParams params) {
