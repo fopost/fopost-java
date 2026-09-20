@@ -12,6 +12,8 @@ import java.util.List;
  * comment someone left or our own reply; {@code canPin} and {@code canEdit} are our own comments
  * only; {@code canPrivateReply} means a DM can be opened from it with
  * {@code StartConversationParams.privateReply}. {@code reaction} is our reaction on a DM.
+ * {@code moderationStatus} is the platform's own state for a comment: published, held, spam or
+ * rejected, and null where the platform does not report one.
  */
 public record InboxItem(
         String id,
@@ -49,6 +51,7 @@ public record InboxItem(
         Boolean canSendMedia,
         Boolean canQuickReply,
         Boolean canPrivateReply,
+        String moderationStatus,
         PostRef post,
         InboxPostContext postContext,
         InboxAccountRef account) {}
