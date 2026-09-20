@@ -2,6 +2,35 @@ package com.fopost.sdk.resource;
 
 import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.model.Ad;
+import com.fopost.sdk.model.AdActivity;
+import com.fopost.sdk.model.AdLabel;
+import com.fopost.sdk.model.AdLibraryPage;
+import com.fopost.sdk.model.AdStudy;
+import com.fopost.sdk.model.CatalogBatchResult;
+import com.fopost.sdk.model.CatalogProductsPage;
+import com.fopost.sdk.model.HighDemandPeriod;
+import com.fopost.sdk.model.IosCampaignLimits;
+import com.fopost.sdk.model.PartnershipCreator;
+import com.fopost.sdk.model.ProductCatalog;
+import com.fopost.sdk.model.ProductFeed;
+import com.fopost.sdk.model.ProductFeedUpload;
+import com.fopost.sdk.model.ProductSet;
+import com.fopost.sdk.model.ReachFrequencyPrediction;
+import com.fopost.sdk.model.ValueRuleSet;
+import com.fopost.sdk.param.AdLabelParams;
+import com.fopost.sdk.param.ApplyAdLabelParams;
+import com.fopost.sdk.param.CatalogProductBatchParams;
+import com.fopost.sdk.param.CreateAdStudyParams;
+import com.fopost.sdk.param.CreateCatalogParams;
+import com.fopost.sdk.param.CreateHighDemandPeriodParams;
+import com.fopost.sdk.param.CreateProductFeedParams;
+import com.fopost.sdk.param.CreateReachFrequencyParams;
+import com.fopost.sdk.param.CreateValueRuleSetParams;
+import com.fopost.sdk.param.PartnershipParams;
+import com.fopost.sdk.param.ProductSetParams;
+import com.fopost.sdk.param.ReachFrequencyActionParams;
+import com.fopost.sdk.param.StartFeedUploadParams;
+import com.fopost.sdk.param.UpdateCatalogParams;
 import com.fopost.sdk.model.AdAccountTree;
 import com.fopost.sdk.model.AdCampaign;
 import com.fopost.sdk.model.AdConnection;
@@ -45,7 +74,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Boosts, ads, campaigns, creatives, audiences, insights and lead forms on the connected ad accounts.
+ * Boosts, ads, campaigns, creatives, catalogs, audiences, predictions, the public ad archive,
+ * insights and lead forms on the connected ad accounts.
  *
  * <pre>{@code
  * BoostablePost candidate = client.ads().boostable(workspaceId).get(0);
@@ -577,6 +607,475 @@ public final class AdsResource {
         return ApiClient.unwrap(http.post(path + "/duplicate", body, connectionQuery(workspaceId, connectionId)))
                 .path("id")
                 .asText();
+    }
+
+    // ─── Goals ──────────────────────────────────────────────────────
+
+    /**
+     * The goals this connection's network can run right now. Ask rather than assume: a goal the
+     * deployment is not set up for is absent here and is refused if you send it anyway.
+     */
+    public List<String> goals(String connectionId) {
+        return goals(connectionId, null);
+    }
+
+    public List<String> goals(String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/goals", connectionQuery(workspaceId, connectionId))),
+                String.class);
+    }
+
+    // ─── Product catalogs ───────────────────────────────────────────
+
+    /** Catalogs the connection's business portfolios reach. Read live, never stored. */
+    public List<ProductCatalog> catalogs(String connectionId) {
+        return catalogs(connectionId, null);
+    }
+
+    public List<ProductCatalog> catalogs(String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/catalogs", connectionQuery(workspaceId, connectionId)))
+                        .path("catalogs"),
+                ProductCatalog.class);
+    }
+
+    /** Created on the connection's business portfolio. Also needs the {@code publish} scope. */
+    public ProductCatalog createCatalog(CreateCatalogParams params) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/ads/catalogs", params.toMap())), ProductCatalog.class);
+    }
+
+    public ProductCatalog catalog(String catalogId, String connectionId) {
+        return catalog(catalogId, connectionId, null);
+    }
+
+    public ProductCatalog catalog(String catalogId, String connectionId, String workspaceId) {
+        return http.convert(
+                ApiClient.unwrap(
+                        http.get("/v1/ads/catalogs/" + catalogId, connectionQuery(workspaceId, connectionId))),
+                ProductCatalog.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public ProductCatalog updateCatalog(
+            String catalogId, String workspaceId, String connectionId, UpdateCatalogParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "PATCH",
+                        "/v1/ads/catalogs/" + catalogId,
+                        params.toMap(),
+                        connectionQuery(workspaceId, connectionId))),
+                ProductCatalog.class);
+    }
+
+    /**
+     * Deletes the catalog with every product, feed and set in it. Also needs the {@code publish}
+     * scope.
+     */
+    public void deleteCatalog(String catalogId, String workspaceId, String connectionId) {
+        http.request("DELETE", "/v1/ads/catalogs/" + catalogId, null, connectionQuery(workspaceId, connectionId));
+    }
+
+    /** One page of products; pass {@code nextCursor} back as {@code after}. */
+    public CatalogProductsPage catalogProducts(String catalogId, String connectionId) {
+        return catalogProducts(catalogId, connectionId, null, null);
+    }
+
+    public CatalogProductsPage catalogProducts(
+            String catalogId, String connectionId, String workspaceId, String after) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        if (after != null) {
+            query.put("after", after);
+        }
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/ads/catalogs/" + catalogId + "/products", query)),
+                CatalogProductsPage.class);
+    }
+
+    /**
+     * Up to 500 upserts and deletes in one batch, keyed by your own retailer id. Also needs the
+     * {@code publish} scope.
+     */
+    public CatalogBatchResult writeCatalogProducts(String catalogId, CatalogProductBatchParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/products", params.toMap())),
+                CatalogBatchResult.class);
+    }
+
+    public List<ProductFeed> productFeeds(String catalogId, String connectionId) {
+        return productFeeds(catalogId, connectionId, null);
+    }
+
+    public List<ProductFeed> productFeeds(String catalogId, String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/catalogs/" + catalogId + "/feeds", connectionQuery(workspaceId, connectionId))),
+                ProductFeed.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public ProductFeed createProductFeed(String catalogId, CreateProductFeedParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/feeds", params.toMap())),
+                ProductFeed.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public void deleteProductFeed(String catalogId, String feedId, String workspaceId, String connectionId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId,
+                null,
+                connectionQuery(workspaceId, connectionId));
+    }
+
+    /** Each run the network made of the feed. */
+    public List<ProductFeedUpload> feedUploads(String catalogId, String feedId, String connectionId) {
+        return feedUploads(catalogId, feedId, connectionId, null);
+    }
+
+    public List<ProductFeedUpload> feedUploads(
+            String catalogId, String feedId, String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId + "/uploads",
+                        connectionQuery(workspaceId, connectionId))),
+                ProductFeedUpload.class);
+    }
+
+    /** Fetches the feed now and returns the id of the run. Also needs the {@code publish} scope. */
+    public String startFeedUpload(String catalogId, String feedId, StartFeedUploadParams params) {
+        return ApiClient.unwrap(http.post(
+                        "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId + "/uploads", params.toMap()))
+                .path("id")
+                .asText();
+    }
+
+    /** A catalog ad runs from a product set, not the whole catalog. */
+    public List<ProductSet> productSets(String catalogId, String connectionId) {
+        return productSets(catalogId, connectionId, null);
+    }
+
+    public List<ProductSet> productSets(String catalogId, String connectionId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/catalogs/" + catalogId + "/product-sets",
+                        connectionQuery(workspaceId, connectionId))),
+                ProductSet.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public ProductSet createProductSet(String catalogId, ProductSetParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/product-sets", params.toMap())),
+                ProductSet.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public ProductSet updateProductSet(
+            String catalogId, String setId, String workspaceId, String connectionId, ProductSetParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "PATCH",
+                        "/v1/ads/catalogs/" + catalogId + "/product-sets/" + setId,
+                        params.toMap(),
+                        connectionQuery(workspaceId, connectionId))),
+                ProductSet.class);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public void deleteProductSet(String catalogId, String setId, String workspaceId, String connectionId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/catalogs/" + catalogId + "/product-sets/" + setId,
+                null,
+                connectionQuery(workspaceId, connectionId));
+    }
+
+    // ─── Reach and frequency ────────────────────────────────────────
+
+    public List<ReachFrequencyPrediction> reachFrequency(String connectionId, String adAccountId) {
+        return reachFrequency(connectionId, adAccountId, null);
+    }
+
+    public List<ReachFrequencyPrediction> reachFrequency(
+            String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                                "/v1/ads/reach-frequency", accountQuery(workspaceId, connectionId, adAccountId)))
+                        .path("predictions"),
+                ReachFrequencyPrediction.class);
+    }
+
+    /** Prices a flight. Nothing is bought until you reserve it. */
+    public ReachFrequencyPrediction createReachFrequency(CreateReachFrequencyParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/reach-frequency", params.toMap())),
+                ReachFrequencyPrediction.class);
+    }
+
+    public ReachFrequencyPrediction reachFrequencyPrediction(
+            String predictionId, String connectionId, String adAccountId) {
+        return reachFrequencyPrediction(predictionId, connectionId, adAccountId, null);
+    }
+
+    public ReachFrequencyPrediction reachFrequencyPrediction(
+            String predictionId, String connectionId, String adAccountId, String workspaceId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/reach-frequency/" + predictionId,
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                ReachFrequencyPrediction.class);
+    }
+
+    /** Holds the inventory the prediction priced. Also needs the {@code publish} scope. */
+    public ReachFrequencyPrediction reserveReachFrequency(
+            String predictionId, ReachFrequencyActionParams params) {
+        return reachFrequencyAction(predictionId, "reserve", params);
+    }
+
+    /** Also needs the {@code publish} scope. */
+    public ReachFrequencyPrediction cancelReachFrequency(
+            String predictionId, ReachFrequencyActionParams params) {
+        return reachFrequencyAction(predictionId, "cancel", params);
+    }
+
+    // ─── Ad Library ─────────────────────────────────────────────────
+
+    /**
+     * The public ad archive: ads anyone is running, by keyword or by Page. Read live on every call
+     * and stored nowhere, so an ad that stops running is simply absent from the next search.
+     * {@code countries} are two-letter codes the ad reached.
+     */
+    public AdLibraryPage library(String connectionId, List<String> countries, String query) {
+        return library(connectionId, countries, query, null, null, null);
+    }
+
+    public AdLibraryPage library(
+            String connectionId,
+            List<String> countries,
+            String query,
+            List<String> pageIds,
+            String activeStatus,
+            String workspaceId) {
+        Map<String, Object> params = connectionQuery(workspaceId, connectionId);
+        params.put("countries", String.join(",", countries));
+        if (query != null) {
+            params.put("q", query);
+        }
+        if (pageIds != null && !pageIds.isEmpty()) {
+            params.put("page_ids", String.join(",", pageIds));
+        }
+        if (activeStatus != null) {
+            params.put("active_status", activeStatus);
+        }
+        return http.convert(ApiClient.unwrap(http.get("/v1/ads/library", params)), AdLibraryPage.class);
+    }
+
+    // ─── Partnership ads ────────────────────────────────────────────
+
+    /** Creators who allowlisted this Page to run partnership ads on their posts. */
+    public List<PartnershipCreator> partnershipCreators(String connectionId, String pageId) {
+        return partnershipCreators(connectionId, pageId, null);
+    }
+
+    public List<PartnershipCreator> partnershipCreators(
+            String connectionId, String pageId, String workspaceId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("page_id", pageId);
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/partnership/creators", query)), PartnershipCreator.class);
+    }
+
+    /** Asks a creator for permission and returns the list as it now stands. */
+    public List<PartnershipCreator> requestPartnership(PartnershipParams params) {
+        return http.convertList(
+                ApiClient.unwrap(http.post("/v1/ads/partnership/creators", params.toMap())),
+                PartnershipCreator.class);
+    }
+
+    public void revokePartnership(String creatorId, String workspaceId, String connectionId, String pageId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("page_id", pageId);
+        http.request("DELETE", "/v1/ads/partnership/creators/" + creatorId, null, query);
+    }
+
+    // ─── Ad account settings ────────────────────────────────────────
+
+    /** Who changed what on the ad account, and when. Dates are YYYY-MM-DD. */
+    public List<AdActivity> accountActivity(String connectionId, String adAccountId) {
+        return accountActivity(connectionId, adAccountId, null, null, null);
+    }
+
+    public List<AdActivity> accountActivity(
+            String connectionId, String adAccountId, String since, String until, String workspaceId) {
+        Map<String, Object> query = accountQuery(workspaceId, connectionId, adAccountId);
+        if (since != null) {
+            query.put("since", since);
+        }
+        if (until != null) {
+            query.put("until", until);
+        }
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/account/activity", query)).path("activity"), AdActivity.class);
+    }
+
+    public List<AdLabel> labels(String connectionId, String adAccountId) {
+        return labels(connectionId, adAccountId, null);
+    }
+
+    public List<AdLabel> labels(String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/labels", accountQuery(workspaceId, connectionId, adAccountId))),
+                AdLabel.class);
+    }
+
+    public AdLabel createLabel(AdLabelParams params) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/ads/account/labels", params.toMap())), AdLabel.class);
+    }
+
+    public AdLabel updateLabel(String labelId, String workspaceId, String connectionId, AdLabelParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "PATCH",
+                        "/v1/ads/account/labels/" + labelId,
+                        params.toMap(),
+                        connectionQuery(workspaceId, connectionId))),
+                AdLabel.class);
+    }
+
+    public void deleteLabel(String labelId, String workspaceId, String connectionId, String adAccountId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/account/labels/" + labelId,
+                null,
+                accountQuery(workspaceId, connectionId, adAccountId));
+    }
+
+    /** Keeps whatever labels the object already carries. */
+    public void applyLabel(String labelId, ApplyAdLabelParams params) {
+        http.post("/v1/ads/account/labels/" + labelId + "/apply", params.toMap());
+    }
+
+    public List<AdStudy> studies(String connectionId, String adAccountId) {
+        return studies(connectionId, adAccountId, null);
+    }
+
+    public List<AdStudy> studies(String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/studies", accountQuery(workspaceId, connectionId, adAccountId))),
+                AdStudy.class);
+    }
+
+    /** Splits traffic evenly across the cells for the length of the flight. */
+    public AdStudy createStudy(CreateAdStudyParams params) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/ads/account/studies", params.toMap())), AdStudy.class);
+    }
+
+    public AdStudy study(String studyId, String connectionId, String adAccountId) {
+        return study(studyId, connectionId, adAccountId, null);
+    }
+
+    public AdStudy study(String studyId, String connectionId, String adAccountId, String workspaceId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/studies/" + studyId,
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                AdStudy.class);
+    }
+
+    public void deleteStudy(String studyId, String workspaceId, String connectionId, String adAccountId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/account/studies/" + studyId,
+                null,
+                accountQuery(workspaceId, connectionId, adAccountId));
+    }
+
+    /** How many iOS 14 campaigns the account may run at once, per app. */
+    public List<IosCampaignLimits> iosCampaignLimits(String connectionId, String adAccountId) {
+        return iosCampaignLimits(connectionId, adAccountId, null);
+    }
+
+    public List<IosCampaignLimits> iosCampaignLimits(
+            String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/ios-limits", accountQuery(workspaceId, connectionId, adAccountId))),
+                IosCampaignLimits.class);
+    }
+
+    public List<HighDemandPeriod> highDemandPeriods(String connectionId, String adAccountId) {
+        return highDemandPeriods(connectionId, adAccountId, null);
+    }
+
+    public List<HighDemandPeriod> highDemandPeriods(
+            String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/high-demand-periods",
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                HighDemandPeriod.class);
+    }
+
+    /** Tells the network to expect heavier spend over a window, so pacing allows for it. */
+    public HighDemandPeriod createHighDemandPeriod(CreateHighDemandPeriodParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/account/high-demand-periods", params.toMap())),
+                HighDemandPeriod.class);
+    }
+
+    public void deleteHighDemandPeriod(
+            String periodId, String workspaceId, String connectionId, String adAccountId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/account/high-demand-periods/" + periodId,
+                null,
+                accountQuery(workspaceId, connectionId, adAccountId));
+    }
+
+    public List<ValueRuleSet> valueRuleSets(String connectionId, String adAccountId) {
+        return valueRuleSets(connectionId, adAccountId, null);
+    }
+
+    public List<ValueRuleSet> valueRuleSets(String connectionId, String adAccountId, String workspaceId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/account/value-rule-sets",
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                ValueRuleSet.class);
+    }
+
+    /** Weights conversions so some audiences count for more than others. */
+    public ValueRuleSet createValueRuleSet(CreateValueRuleSetParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/account/value-rule-sets", params.toMap())),
+                ValueRuleSet.class);
+    }
+
+    public void deleteValueRuleSet(
+            String ruleSetId, String workspaceId, String connectionId, String adAccountId) {
+        http.request(
+                "DELETE",
+                "/v1/ads/account/value-rule-sets/" + ruleSetId,
+                null,
+                accountQuery(workspaceId, connectionId, adAccountId));
+    }
+
+    private ReachFrequencyPrediction reachFrequencyAction(
+            String predictionId, String action, ReachFrequencyActionParams params) {
+        return http.convert(
+                ApiClient.unwrap(
+                        http.post("/v1/ads/reach-frequency/" + predictionId + "/" + action, params.toMap())),
+                ReachFrequencyPrediction.class);
+    }
+
+    private static Map<String, Object> accountQuery(
+            String workspaceId, String connectionId, String adAccountId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("ad_account_id", adAccountId);
+        return query;
     }
 
     private static Map<String, Object> connectionQuery(String workspaceId, String connectionId) {
