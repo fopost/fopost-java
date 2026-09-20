@@ -7,12 +7,17 @@ import com.fopost.sdk.model.AdCampaign;
 import com.fopost.sdk.model.AdConnection;
 import com.fopost.sdk.model.AdCreative;
 import com.fopost.sdk.model.AdInsightsReport;
+import com.fopost.sdk.model.AdLibraryPage;
+import com.fopost.sdk.model.AdProvider;
 import com.fopost.sdk.model.AdSet;
 import com.fopost.sdk.model.AdSource;
 import com.fopost.sdk.model.Audience;
 import com.fopost.sdk.model.AudiencesResult;
 import com.fopost.sdk.model.BoostablePost;
+import com.fopost.sdk.model.BidPricing;
 import com.fopost.sdk.model.BulkAdStatusResult;
+import com.fopost.sdk.model.ConversionMetrics;
+import com.fopost.sdk.model.ConversionRule;
 import com.fopost.sdk.model.CreatedAudience;
 import com.fopost.sdk.model.ExternalAd;
 import com.fopost.sdk.model.LeadFormDetail;
@@ -23,15 +28,21 @@ import com.fopost.sdk.model.LeadsFeed;
 import com.fopost.sdk.model.LeadsPage;
 import com.fopost.sdk.model.NetworkAd;
 import com.fopost.sdk.model.ReachEstimate;
+import com.fopost.sdk.model.SupplyForecast;
 import com.fopost.sdk.model.TargetingOption;
+import com.fopost.sdk.param.AdCompanyParams;
+import com.fopost.sdk.param.AdForecastParams;
 import com.fopost.sdk.param.AdInsightsParams;
+import com.fopost.sdk.param.AdLibraryParams;
 import com.fopost.sdk.param.BoostPostParams;
 import com.fopost.sdk.param.BulkAdStatusParams;
 import com.fopost.sdk.param.CreateAdCampaignParams;
 import com.fopost.sdk.param.CreateAdCreativeParams;
 import com.fopost.sdk.param.CreateAdParams;
 import com.fopost.sdk.param.CreateAdSetParams;
+import com.fopost.sdk.param.ConversionEventParams;
 import com.fopost.sdk.param.CreateAudienceParams;
+import com.fopost.sdk.param.CreateConversionRuleParams;
 import com.fopost.sdk.param.CreateLeadFormParams;
 import com.fopost.sdk.param.CreateNetworkAdParams;
 import com.fopost.sdk.param.LeadsFeedParams;
@@ -39,6 +50,7 @@ import com.fopost.sdk.param.ReachEstimateParams;
 import com.fopost.sdk.param.UpdateAdCampaignParams;
 import com.fopost.sdk.param.UpdateAdSetParams;
 import com.fopost.sdk.param.UpdateAudienceParams;
+import com.fopost.sdk.param.UpdateConversionRuleParams;
 import com.fopost.sdk.param.UpdateNetworkAdParams;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -125,16 +137,21 @@ public final class AdsResource {
 
     // ─── Connections ──────────────────────────────────────────────────────────
 
-    public String authorizeMeta(String workspaceId) {
-        return authorizeMeta(workspaceId, null, null);
+    /** The ad networks this deployment knows, with what each one supports. */
+    public List<AdProvider> providers() {
+        return http.convertList(ApiClient.unwrap(http.get("/v1/ads/providers", Map.of())), AdProvider.class);
+    }
+
+    public String authorize(String provider, String workspaceId) {
+        return authorize(provider, workspaceId, null, null);
     }
 
     /**
-     * The login url for connecting a Meta Ads account. The user who calls this must finish the
-     * login in their own browser session. {@code method} is business or user; {@code returnTo} is
-     * the dashboard path to land on afterwards.
+     * The login url for connecting an ad network. The user who calls this must finish the login in
+     * their own browser session. {@code method} is one of the network's own connect methods;
+     * {@code returnTo} is the dashboard path to land on afterwards.
      */
-    public String authorizeMeta(String workspaceId, String method, String returnTo) {
+    public String authorize(String provider, String workspaceId, String method, String returnTo) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("workspaceId", workspaceId);
         if (method != null) {
@@ -143,7 +160,21 @@ public final class AdsResource {
         if (returnTo != null) {
             body.put("returnTo", returnTo);
         }
-        return ApiClient.unwrap(http.post("/v1/ads/connections/meta/authorize", body)).path("url").asText();
+        return ApiClient.unwrap(http.post("/v1/ads/connections/" + provider + "/authorize", body))
+                .path("url")
+                .asText();
+    }
+
+    /** @deprecated use {@link #authorize(String, String)} with the provider id meta. */
+    @Deprecated
+    public String authorizeMeta(String workspaceId) {
+        return authorize("meta", workspaceId, null, null);
+    }
+
+    /** @deprecated use {@link #authorize(String, String, String, String)}. */
+    @Deprecated
+    public String authorizeMeta(String workspaceId, String method, String returnTo) {
+        return authorize("meta", workspaceId, method, returnTo);
     }
 
     /** Also deletes every ad record FoPost created through the connection. */
@@ -457,6 +488,131 @@ public final class AdsResource {
         return ApiClient.unwrap(http.post("/v1/ads/audiences/" + audienceId + "/users", body, query))
                 .path("added")
                 .asInt();
+    }
+
+    /**
+     * Add companies to a company-list audience. Returns how many the network took. The rows travel
+     * with the request and are never stored.
+     */
+    public int addAudienceCompanies(
+            String audienceId, String workspaceId, String connectionId, List<AdCompanyParams> companies) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("companies", companies.stream().map(AdCompanyParams::toMap).toList());
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        return ApiClient.unwrap(http.post("/v1/ads/audiences/" + audienceId + "/companies", body, query))
+                .path("added")
+                .asInt();
+    }
+
+    // ─── Forecasts, conversions and the public ad library ─────────────────────
+
+    /** What the auction currently costs for that audience. */
+    public BidPricing bidPricing(AdForecastParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/linkedin/bid-pricing", params.toMap())), BidPricing.class);
+    }
+
+    /** What that audience would deliver at that budget. */
+    public SupplyForecast supplyForecast(AdForecastParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/linkedin/supply-forecast", params.toMap())),
+                SupplyForecast.class);
+    }
+
+    public List<ConversionRule> conversionRules(String workspaceId, String connectionId, String adAccountId) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("ad_account_id", adAccountId);
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/linkedin/conversion-rules", query)), ConversionRule.class);
+    }
+
+    /** Returns the new rule's id. */
+    public String createConversionRule(CreateConversionRuleParams params) {
+        return ApiClient.unwrap(http.post("/v1/ads/linkedin/conversion-rules", params.toMap()))
+                .path("id")
+                .asText();
+    }
+
+    public ConversionRule conversionRule(String ruleId, String workspaceId, String connectionId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(conversionRulePath(ruleId, ""), connectionQuery(workspaceId, connectionId))),
+                ConversionRule.class);
+    }
+
+    public ConversionRule updateConversionRule(
+            String ruleId, String workspaceId, String connectionId, UpdateConversionRuleParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "PATCH",
+                        conversionRulePath(ruleId, ""),
+                        params.toMap(),
+                        connectionQuery(workspaceId, connectionId))),
+                ConversionRule.class);
+    }
+
+    /** Turns the rule off; the network keeps the history. */
+    public void deleteConversionRule(String ruleId, String workspaceId, String connectionId) {
+        http.request("DELETE", conversionRulePath(ruleId, ""), null, connectionQuery(workspaceId, connectionId));
+    }
+
+    public ConversionRule attachConversionRule(
+            String ruleId, String workspaceId, String connectionId, String campaignId) {
+        return association("POST", ruleId, workspaceId, connectionId, campaignId);
+    }
+
+    public ConversionRule detachConversionRule(
+            String ruleId, String workspaceId, String connectionId, String campaignId) {
+        return association("DELETE", ruleId, workspaceId, connectionId, campaignId);
+    }
+
+    /** What the rule recorded between two YYYY-MM-DD days, inclusive. */
+    public ConversionMetrics conversionMetrics(
+            String ruleId, String workspaceId, String connectionId, String since, String until) {
+        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
+        query.put("since", since);
+        query.put("until", until);
+        return http.convert(
+                ApiClient.unwrap(http.get(conversionRulePath(ruleId, "/metrics"), query)), ConversionMetrics.class);
+    }
+
+    /**
+     * Send conversions back to the network. Returns how many it took. Each event needs an email or
+     * a click id; the address is hashed inside the API and nothing about an event is stored.
+     */
+    public int sendConversionEvents(
+            String ruleId, String workspaceId, String connectionId, List<ConversionEventParams> events) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("events", events.stream().map(ConversionEventParams::toMap).toList());
+        return ApiClient.unwrap(
+                        http.post(
+                                conversionRulePath(ruleId, "/events"),
+                                body,
+                                connectionQuery(workspaceId, connectionId)))
+                .path("accepted")
+                .asInt();
+    }
+
+    /** The network's own public ad library, not the connection's ads. */
+    public AdLibraryPage adLibrary(AdLibraryParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/ads/ad-library", params.toQuery())), AdLibraryPage.class);
+    }
+
+    private ConversionRule association(
+            String method, String ruleId, String workspaceId, String connectionId, String campaignId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("campaignId", campaignId);
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        method,
+                        conversionRulePath(ruleId, "/associations"),
+                        body,
+                        connectionQuery(workspaceId, connectionId))),
+                ConversionRule.class);
+    }
+
+    private static String conversionRulePath(String ruleId, String suffix) {
+        return "/v1/ads/linkedin/conversion-rules/" + ruleId + suffix;
     }
 
     public List<TargetingOption> searchTargeting(String connectionId, String type, String q) {
