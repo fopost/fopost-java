@@ -61,7 +61,8 @@ src/main/java/com/fopost/sdk/
   resource/                PostsResource, AccountsResource (+ .communities()), WorkspacesResource,
                            LabelsResource, WebhooksResource, AnalyticsResource,
                            AutomationsResource, MediaResource, AiResource, CommunitiesResource,
-                           InboxResource, AdsResource, ValidateResource
+                           InboxResource, AdsResource, ValidateResource,
+                           BroadcastsResource, SequencesResource
 ```
 
 **Request flow.** `client.posts().create(params)` → `PostsResource` builds the body and calls
@@ -80,10 +81,24 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `ads`, `validate`. This is
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `validate`. This is
 the most complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
 anything unwrapped.
 
+- `contacts` (scope `inbox`) covers `/v1/contacts/*`: the CRUD, `import`,
+  `{id}/conversations` and the `/v1/contacts/fields` family. Its list envelope is
+  `{data, pagination}`, so it decodes into `ContactPage` rather than `Page<T>`.
+  `createField` puts the workspace on the query string because the handler reads it there.
+  `ContactParams.Update` serializes its `fields` through an `ObjectNode`: the mapper is
+  configured `NON_NULL`, so a plain map would drop the null that clears a field.
+  `conversationAnalytics` reaches `/v1/analytics/inbox/conversations` and needs `analytics`.
+- `broadcasts` and `sequences` (scope `inbox`) cover `/v1/broadcasts/*` and `/v1/sequences/*`.
+  `send`, `cancel`, `enroll` and `unenroll` also need `publish`, because they reach a platform.
+  Both list envelopes are `{data, pagination}` like contacts, so both decode into their own
+  page records. A recipient's `skipReason` is the messaging window's record: `window_closed`
+  means the network's 24-hour window had shut and nothing was attempted, so a sent count lower
+  than the audience is correct rather than a failure. Say that in the javadoc of anything new
+  that sends.
 - `inbox` (scope `inbox`) covers `/v1/inbox/*` except `/v1/inbox/chat/*` (browser-encrypted X
   Chat) and `/v1/inbox/{id}/attachments/{index}` (a binary stream; this SDK has no download
   pattern). Its lists carry `meta: { page, perPage, total }`, mapped by `model/InboxPage` +

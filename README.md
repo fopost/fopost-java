@@ -99,7 +99,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `posts()`       | `list`, `autoPaginate`, `stream`, `get`, `create`, `update`, `delete`, `duplicate`, `publish`, `retry`, `cancel`, `preflight`, `deliveries`, `publishRuns`, `analytics`, `bulkShift`, `bulkLabel`, `bulkDelete`, `validateImport`, `commitImport`, `rollbackImport` |
 | `workspaces()`  | `list`, `get`, `create`, `update`, `delete`, `analytics`                                                                                                                                     |
-| `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `communities()`                                                       |
+| `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `getIceBreakers`, `setIceBreakers`, `deleteIceBreakers`, `getPersistentMenu`, `setPersistentMenu`, `deletePersistentMenu`, `getGreeting`, `setGreeting`, `deleteGreeting`, `getWebhookSubscription`, `resubscribeWebhook`, `communities()`, `listDiscordChannels`, `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`, `listDiscordPins`, `deleteDiscordMessage`, `pinDiscordMessage`, `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`, `sendDiscordDm`, `listDiscordEvents`, `getDiscordEvent`, `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`, `listDiscordMembers`, `getDiscordMember`, `listDiscordRoles`, `createDiscordRole`, `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole`, `removeDiscordMemberRole`                                                       |
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                 |
@@ -107,7 +107,11 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
-| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
+| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `passThreadControl`, `takeThreadControl`, `handover`, `listApprovals`, `approveReply`, `rejectReply` |
+| `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
+| `broadcasts()`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
+| `sequences()`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
+| `knowledge()`   | `list`, `create`, `createText`, `createUrl`, `createFile`, `update`, `delete`, `sync`, `search`                                                                                                |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 
@@ -119,6 +123,41 @@ the decoded body:
 
 ```java
 JsonNode body = client.request("GET", "/v1/analytics/overview", null, Map.of("days", 30));
+```
+
+## Broadcasts and sequences
+
+A broadcast is one message into every conversation you already have with a segment of your contacts; a sequence is a series of them on a delay. Neither opens a cold DM.
+
+Nothing is sent into a closed messaging window: Messenger and Instagram take a business-initiated message only within 24 hours of the contact's last one, so recipients outside it come back skipped with `window_closed` rather than attempted. Telegram, Slack, Bluesky and Reddit have no window. The number sent is therefore often lower than the audience, and that is correct rather than a failure.
+
+Reading needs the `inbox` scope; `send`, `cancel`, `enroll` and `unenroll` also need `publish`.
+
+```java
+Broadcast broadcast = client.broadcasts().create(
+        BroadcastParams.Create.of(workspaceId, accountId, "September check-in",
+                        "New colours just landed. Want a look?")
+                .audience(AudienceFilter.all().platforms("instagram")));
+
+// recipients() on the result is how many contacts matched, not how many will be messaged.
+BroadcastSent sent = client.broadcasts().send(broadcast.id());
+
+// Who was skipped, and why.
+for (BroadcastRecipient r : client.broadcasts()
+        .recipients(broadcast.id(), BroadcastParams.Recipients.create().status("skipped"))) {
+    System.out.println(r.displayName() + ": " + r.skipReason());
+}
+
+Sequence sequence = client.sequences().create(
+        BroadcastParams.CreateSequence.of(workspaceId, accountId, "Welcome", List.of(
+                SequenceStep.of(0, "Thanks for the follow — anything I can help with?"),
+                SequenceStep.of(48, "Here is what people usually ask us first."))));
+
+// By id, or by the same audience filter a broadcast takes.
+client.sequences().enroll(sequence.id(), BroadcastParams.Enroll.contacts(List.of(contactId)));
+
+// Nothing further fires for them.
+client.sequences().unenroll(sequence.id(), List.of(contactId));
 ```
 
 ## Media
@@ -200,9 +239,48 @@ drafted that a person still has to send; `approveReply` sends the draft (or your
 `rejectReply` discards it.
 
 The actions that act on the platform as the account also need the `publish` scope: `like`,
-`unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, a `reply` with
+`unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, `handover`, a `reply` with
 `InboxReplyParams` carrying `mediaIds` or `quickReplies`, and deleting our own reply. Each works only
 where the item's matching `can*` flag is true.
+
+## Contacts
+
+The people behind the inbox: one person however many handles they write from. An inbound item files its author, a reply files whoever you answered, and both fold into whatever is already on file. Needs the `inbox` scope.
+
+```java
+ContactPage page = client.contacts().list(
+        ContactParams.Filter.create().workspace(workspaceId).search("ada"));
+for (Contact contact : page) {
+    System.out.println(contact.displayName() + " — " + contact.channels().size() + " handles");
+}
+
+// Folds into whoever already holds the first channel, so this cannot duplicate someone.
+Contact contact = client.contacts().create(
+        ContactParams.Create.of(workspaceId, List.of(ContactChannel.of("x", "ada_writes")))
+                .displayName("Ada Okafor")
+                .fields(Map.of("plan_tier", "Pro")));
+
+client.contacts().update(contact.id(), ContactParams.Update.create().clearField("region"));
+client.contacts().delete(contact.id());   // the messages stay in the inbox
+
+// The threads this person appears in, newest first.
+for (ContactConversation thread : client.contacts().conversations(contact.id())) {
+    System.out.println(thread.platform() + " " + thread.messages() + " messages");
+}
+
+// platform and handle are required columns; any other column is a custom field key.
+ContactImportResult result = client.contacts().importCsv(workspaceId, "platform,handle\nx,ada_writes");
+System.out.println(result.created() + " created, " + result.merged() + " merged");
+
+// The columns your workspace keeps.
+ContactField field = client.contacts()
+        .createField(workspaceId, "plan_tier", "Plan Tier", "select", List.of("Free", "Pro"));
+client.contacts().deleteField(field.id());   // removes every answer to it
+
+// Volume and median reply time per thread. Needs the `analytics` scope.
+ConversationAnalytics report = client.contacts()
+        .conversationAnalytics(ContactParams.Conversations.create().days(30).sort("slowest"));
+```
 
 ## Ads
 
