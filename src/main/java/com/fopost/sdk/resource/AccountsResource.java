@@ -9,22 +9,34 @@ import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
 import com.fopost.sdk.model.AccountValidation;
 import com.fopost.sdk.model.AccountsHealthSummary;
-import com.fopost.sdk.model.SlackChannel;
+import com.fopost.sdk.model.DiscordAck;
+import com.fopost.sdk.model.DiscordChannel;
+import com.fopost.sdk.model.DiscordIdentity;
+import com.fopost.sdk.model.DiscordMember;
+import com.fopost.sdk.model.DiscordMessage;
+import com.fopost.sdk.model.DiscordMessageRef;
+import com.fopost.sdk.model.DiscordRole;
+import com.fopost.sdk.model.DiscordScheduledEvent;
+import com.fopost.sdk.model.DiscordThread;
 import com.fopost.sdk.model.MetaGreeting;
 import com.fopost.sdk.model.MetaGreetingText;
 import com.fopost.sdk.model.MetaIceBreaker;
 import com.fopost.sdk.model.MetaIceBreakers;
 import com.fopost.sdk.model.MetaPersistentMenu;
 import com.fopost.sdk.model.MetaPersistentMenuEntry;
+import com.fopost.sdk.model.SlackChannel;
 import com.fopost.sdk.model.SlackIdentity;
 import com.fopost.sdk.model.SlackMember;
 import com.fopost.sdk.model.TelegramBotCommand;
 import com.fopost.sdk.model.TelegramBotCommands;
-import com.fopost.sdk.model.WebhookSubscription;
 import com.fopost.sdk.model.TelegramConnectCode;
 import com.fopost.sdk.model.TelegramConnectStatus;
 import com.fopost.sdk.model.TokenRefresh;
+import com.fopost.sdk.model.WebhookSubscription;
 import com.fopost.sdk.param.CreateAccountParams;
+import com.fopost.sdk.param.DiscordEventParams;
+import com.fopost.sdk.param.DiscordRoleParams;
+import com.fopost.sdk.param.UpdateDiscordIdentityParams;
 import com.fopost.sdk.param.UpdateSlackIdentityParams;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -323,6 +335,189 @@ public final class AccountsResource {
         return http.convert(
                 ApiClient.unwrap(http.post("/v1/accounts/" + accountId + "/webhook-subscription", null)),
                 WebhookSubscription.class);
+    }
+
+    // ── Discord (bot connections) ───────────────────────────────────────
+
+    /**
+     * Text channels the bot can post to in the connected server.
+     *
+     * <p>A 409 {@code webhook_connection} means the account posts through a webhook; upgrade it to
+     * the bot first. The same applies to every other Discord call here.
+     */
+    public List<DiscordChannel> listDiscordChannels(String accountId) {
+        return http.convertList(ApiClient.unwrap(http.get(discord(accountId, "/channels"), null)), DiscordChannel.class);
+    }
+
+    /** Move the account to another channel in the same server. */
+    public DiscordChannel switchDiscordChannel(String accountId, String channelId) {
+        ObjectNode body = Json.MAPPER.createObjectNode().put("channel_id", channelId);
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", discord(accountId, "/channels/current"), body, null)),
+                DiscordChannel.class);
+    }
+
+    /** The nickname and avatar the bot wears in the server. */
+    public DiscordIdentity getDiscordIdentity(String accountId) {
+        return http.convert(ApiClient.unwrap(http.get(discord(accountId, "/identity"), null)), DiscordIdentity.class);
+    }
+
+    /** Change the nickname or avatar the bot wears in the server. */
+    public DiscordIdentity updateDiscordIdentity(String accountId, UpdateDiscordIdentityParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", discord(accountId, "/identity"), params.toJson(), null)),
+                DiscordIdentity.class);
+    }
+
+    /** Pinned messages in the account's channel. */
+    public List<DiscordMessage> listDiscordPins(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(discord(accountId, "/messages/pinned"), null)), DiscordMessage.class);
+    }
+
+    /** Remove a message from the account's channel. */
+    public DiscordAck deleteDiscordMessage(String accountId, String messageId) {
+        return ack(http.delete(discord(accountId, "/messages/" + messageId)));
+    }
+
+    /** Pin a message in the account's channel. */
+    public DiscordAck pinDiscordMessage(String accountId, String messageId) {
+        return ack(http.post(discord(accountId, "/messages/" + messageId + "/pin"), null));
+    }
+
+    /** Unpin a message in the account's channel. */
+    public DiscordAck unpinDiscordMessage(String accountId, String messageId) {
+        return ack(http.delete(discord(accountId, "/messages/" + messageId + "/pin")));
+    }
+
+    /** Publish an announcement-channel message to every server following the channel. */
+    public DiscordMessageRef crosspostDiscordMessage(String accountId, String messageId) {
+        return http.convert(
+                ApiClient.unwrap(http.post(discord(accountId, "/messages/" + messageId + "/crosspost"), null)),
+                DiscordMessageRef.class);
+    }
+
+    /** Start a thread on a message. */
+    public DiscordThread createDiscordThread(String accountId, String messageId, String name) {
+        return createDiscordThread(accountId, messageId, name, null);
+    }
+
+    /** {@code autoArchiveDuration} is 60, 1440, 4320 or 10080 minutes, or null for the default. */
+    public DiscordThread createDiscordThread(
+            String accountId, String messageId, String name, Integer autoArchiveDuration) {
+        ObjectNode body = Json.MAPPER.createObjectNode().put("name", name);
+        if (autoArchiveDuration != null) {
+            body.put("auto_archive_duration", autoArchiveDuration);
+        }
+        return http.convert(
+                ApiClient.unwrap(http.post(discord(accountId, "/messages/" + messageId + "/thread"), body)),
+                DiscordThread.class);
+    }
+
+    /** Send one message to a member of the server. */
+    public DiscordMessageRef sendDiscordDm(String accountId, String memberId, String content) {
+        ObjectNode body = Json.MAPPER.createObjectNode();
+        body.put("member_id", memberId);
+        body.put("content", content);
+        return http.convert(
+                ApiClient.unwrap(http.post(discord(accountId, "/dm"), body)), DiscordMessageRef.class);
+    }
+
+    /** The server's scheduled events. */
+    public List<DiscordScheduledEvent> listDiscordEvents(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(discord(accountId, "/events"), null)), DiscordScheduledEvent.class);
+    }
+
+    /** One scheduled event. */
+    public DiscordScheduledEvent getDiscordEvent(String accountId, String eventId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(discord(accountId, "/events/" + eventId), null)),
+                DiscordScheduledEvent.class);
+    }
+
+    /** Add an event to the server's calendar. */
+    public DiscordScheduledEvent createDiscordEvent(String accountId, DiscordEventParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post(discord(accountId, "/events"), params.toJson())),
+                DiscordScheduledEvent.class);
+    }
+
+    /** Change a scheduled event. */
+    public DiscordScheduledEvent updateDiscordEvent(String accountId, String eventId, DiscordEventParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", discord(accountId, "/events/" + eventId), params.toJson(), null)),
+                DiscordScheduledEvent.class);
+    }
+
+    /** Remove a scheduled event. */
+    public DiscordAck deleteDiscordEvent(String accountId, String eventId) {
+        return ack(http.delete(discord(accountId, "/events/" + eventId)));
+    }
+
+    /** The server's roster. */
+    public List<DiscordMember> listDiscordMembers(String accountId) {
+        return listDiscordMembers(accountId, null, null);
+    }
+
+    /** {@code query} searches by username or nickname prefix. Either argument may be null. */
+    public List<DiscordMember> listDiscordMembers(String accountId, String query, Integer limit) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        if (query != null) {
+            params.put("q", query);
+        }
+        if (limit != null) {
+            params.put("limit", limit);
+        }
+        return http.convertList(
+                ApiClient.unwrap(http.get(discord(accountId, "/members"), params.isEmpty() ? null : params)),
+                DiscordMember.class);
+    }
+
+    /** One member of the server. */
+    public DiscordMember getDiscordMember(String accountId, String memberId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(discord(accountId, "/members/" + memberId), null)), DiscordMember.class);
+    }
+
+    /** The server's roles, highest first. */
+    public List<DiscordRole> listDiscordRoles(String accountId) {
+        return http.convertList(ApiClient.unwrap(http.get(discord(accountId, "/roles"), null)), DiscordRole.class);
+    }
+
+    /** Add a role to the server. */
+    public DiscordRole createDiscordRole(String accountId, DiscordRoleParams params) {
+        return http.convert(ApiClient.unwrap(http.post(discord(accountId, "/roles"), params.toJson())), DiscordRole.class);
+    }
+
+    /** Change a role on the server. */
+    public DiscordRole updateDiscordRole(String accountId, String roleId, DiscordRoleParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.request("PATCH", discord(accountId, "/roles/" + roleId), params.toJson(), null)),
+                DiscordRole.class);
+    }
+
+    /** Remove a role from the server. */
+    public DiscordAck deleteDiscordRole(String accountId, String roleId) {
+        return ack(http.delete(discord(accountId, "/roles/" + roleId)));
+    }
+
+    /** Give a member a role. */
+    public DiscordAck addDiscordMemberRole(String accountId, String roleId, String memberId) {
+        return ack(http.request("PUT", discord(accountId, "/roles/" + roleId + "/members/" + memberId), null, null));
+    }
+
+    /** Take a role from a member. */
+    public DiscordAck removeDiscordMemberRole(String accountId, String roleId, String memberId) {
+        return ack(http.delete(discord(accountId, "/roles/" + roleId + "/members/" + memberId)));
+    }
+
+    private static String discord(String accountId, String suffix) {
+        return "/v1/accounts/" + accountId + "/discord" + suffix;
+    }
+
+    private DiscordAck ack(JsonNode body) {
+        return http.convert(ApiClient.unwrap(body), DiscordAck.class);
     }
 
     private static Map<String, Object> query(String key, Object value) {
