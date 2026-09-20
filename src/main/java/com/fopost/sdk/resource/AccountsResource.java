@@ -24,6 +24,13 @@ import com.fopost.sdk.model.MetaIceBreaker;
 import com.fopost.sdk.model.MetaIceBreakers;
 import com.fopost.sdk.model.MetaPersistentMenu;
 import com.fopost.sdk.model.MetaPersistentMenuEntry;
+import com.fopost.sdk.model.BlueskyLanguages;
+import com.fopost.sdk.model.InstagramAudio;
+import com.fopost.sdk.model.InstagramPublishingLimit;
+import com.fopost.sdk.model.InstagramStory;
+import com.fopost.sdk.model.InstagramStoryInsights;
+import com.fopost.sdk.model.LinkedInMention;
+import com.fopost.sdk.model.PinterestBoard;
 import com.fopost.sdk.model.SlackChannel;
 import com.fopost.sdk.model.SlackIdentity;
 import com.fopost.sdk.model.SlackMember;
@@ -31,13 +38,24 @@ import com.fopost.sdk.model.TelegramBotCommand;
 import com.fopost.sdk.model.TelegramBotCommands;
 import com.fopost.sdk.model.TelegramConnectCode;
 import com.fopost.sdk.model.TelegramConnectStatus;
+import com.fopost.sdk.model.TikTokCreatorInfo;
+import com.fopost.sdk.model.TikTokMusic;
+import com.fopost.sdk.model.TikTokPlace;
+import com.fopost.sdk.model.TikTokVideoSource;
 import com.fopost.sdk.model.TokenRefresh;
 import com.fopost.sdk.model.WebhookSubscription;
 import com.fopost.sdk.param.CreateAccountParams;
 import com.fopost.sdk.param.DiscordEventParams;
 import com.fopost.sdk.param.DiscordRoleParams;
 import com.fopost.sdk.param.UpdateDiscordIdentityParams;
+import com.fopost.sdk.model.YouTubeCaptionTrack;
+import com.fopost.sdk.model.YouTubePlaylist;
+import com.fopost.sdk.model.YouTubeTranscript;
+import com.fopost.sdk.param.CreateAccountParams;
+import com.fopost.sdk.param.CreatePinterestBoardParams;
+import com.fopost.sdk.param.CreateYouTubePlaylistParams;
 import com.fopost.sdk.param.UpdateSlackIdentityParams;
+import com.fopost.sdk.param.UploadYouTubeCaptionsParams;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -527,5 +545,191 @@ public final class AccountsResource {
         Map<String, Object> query = new LinkedHashMap<>();
         query.put(key, value);
         return query;
+    }
+
+    // --- Per-network extras ------------------------------------------------
+
+    /** Boards this Pinterest connection can pin to. */
+    public List<PinterestBoard> listPinterestBoards(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/pinterest/boards", null)),
+                PinterestBoard.class);
+    }
+
+    /** Create a board on the connected Pinterest account. */
+    public PinterestBoard createPinterestBoard(String accountId, CreatePinterestBoardParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/" + accountId + "/pinterest/boards", params.toMap())),
+                PinterestBoard.class);
+    }
+
+    /** The channel's own playlists, with the stored default marked. */
+    public List<YouTubePlaylist> listYouTubePlaylists(String accountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/youtube/playlists", null)),
+                YouTubePlaylist.class);
+    }
+
+    /** Create a playlist on the connected channel. */
+    public YouTubePlaylist createYouTubePlaylist(String accountId, CreateYouTubePlaylistParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/" + accountId + "/youtube/playlists", params.toMap())),
+                YouTubePlaylist.class);
+    }
+
+    /**
+     * The playlist a new video joins when the post picks none. A null {@code playlistId} clears it.
+     * Returns what is stored afterwards.
+     */
+    public String setDefaultYouTubePlaylist(String accountId, String playlistId) {
+        ObjectNode body = Json.MAPPER.createObjectNode();
+        body.put("playlist_id", playlistId);
+        JsonNode data = ApiClient.unwrap(
+                http.put("/v1/accounts/" + accountId + "/youtube/playlists/default", body));
+        JsonNode stored = data == null ? null : data.get("playlist_id");
+        return stored == null || stored.isNull() ? null : stored.asText();
+    }
+
+    /** Caption tracks on one of the channel's videos. */
+    public List<YouTubeCaptionTrack> listYouTubeCaptions(String accountId, String videoId) {
+        return http.convertList(
+                ApiClient.unwrap(
+                        http.get("/v1/accounts/" + accountId + "/youtube/videos/" + videoId + "/captions", null)),
+                YouTubeCaptionTrack.class);
+    }
+
+    /** Upload a caption track to a video. */
+    public YouTubeCaptionTrack uploadYouTubeCaptions(
+            String accountId, String videoId, UploadYouTubeCaptionsParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post(
+                        "/v1/accounts/" + accountId + "/youtube/videos/" + videoId + "/captions", params.toMap())),
+                YouTubeCaptionTrack.class);
+    }
+
+    /** One caption track read back as text. */
+    public YouTubeTranscript readYouTubeTranscript(String accountId, String captionId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/youtube/captions/" + captionId, null)),
+                YouTubeTranscript.class);
+    }
+
+    /** What a post from this Bluesky connection is written in when it does not say. */
+    public BlueskyLanguages getBlueskyLanguages(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/bluesky/languages", null)),
+                BlueskyLanguages.class);
+    }
+
+    /** Store up to three BCP-47 tags. An empty list clears the default. */
+    public BlueskyLanguages setBlueskyLanguages(String accountId, List<String> languages) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("languages", languages == null ? List.of() : languages);
+        return http.convert(
+                ApiClient.unwrap(http.put("/v1/accounts/" + accountId + "/bluesky/languages", body)),
+                BlueskyLanguages.class);
+    }
+
+    /** The switches TikTok enforces at publish time, changed in the TikTok app. */
+    public TikTokCreatorInfo getTikTokCreatorInfo(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/tiktok/creator-info", null)),
+                TikTokCreatorInfo.class);
+    }
+
+    /**
+     * TikTok's Commercial Music Library. Needs the Marketing API product on the TikTok app; without
+     * it the call fails with 403 rather than answering an empty list.
+     *
+     * @param limit 1 to 50, or null for the API default of 20
+     */
+    public List<TikTokMusic> searchTikTokMusic(String accountId, String query, Integer limit) {
+        return http.convertList(
+                ApiClient.unwrap(
+                        http.get("/v1/accounts/" + accountId + "/tiktok/music", searchParams(query, limit))),
+                TikTokMusic.class);
+    }
+
+    /** Places a post can be tagged with. Same TikTok product as the music library. */
+    public List<TikTokPlace> searchTikTokLocations(String accountId, String query, Integer limit) {
+        return http.convertList(
+                ApiClient.unwrap(
+                        http.get("/v1/accounts/" + accountId + "/tiktok/locations", searchParams(query, limit))),
+                TikTokPlace.class);
+    }
+
+    /** Resolves a share link to one of this account's own videos, for repurposing. */
+    public TikTokVideoSource lookupTikTokVideo(String accountId, String url) {
+        return http.convert(
+                ApiClient.unwrap(
+                        http.post("/v1/accounts/" + accountId + "/tiktok/video-download", Map.of("url", url))),
+                TikTokVideoSource.class);
+    }
+
+    private static Map<String, Object> searchParams(String query, Integer limit) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("q", query);
+        if (limit != null) {
+            params.put("limit", limit);
+        }
+        return params;
+    }
+
+    /**
+     * Tracks a Reel can carry. A null {@code query} asks Instagram for what is trending;
+     * {@code audioType} is music (the default) or original_sound.
+     */
+    public List<InstagramAudio> searchInstagramAudio(String accountId, String query, String audioType) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        if (query != null) {
+            params.put("q", query);
+        }
+        if (audioType != null) {
+            params.put("audio_type", audioType);
+        }
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/instagram/audio", params)),
+                InstagramAudio.class);
+    }
+
+    /** How many posts are left before Instagram refuses the next one. */
+    public InstagramPublishingLimit getInstagramPublishingLimit(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/instagram/publishing-limit", null)),
+                InstagramPublishingLimit.class);
+    }
+
+    /**
+     * Stories still inside their 24 hours, posted through FoPost or not. Asking for insights costs
+     * one extra call per story.
+     */
+    public List<InstagramStory> listInstagramStories(String accountId, boolean insights) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        if (insights) {
+            params.put("insights", true);
+        }
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/instagram/stories", params)),
+                InstagramStory.class);
+    }
+
+    /** The insight set for one story. */
+    public InstagramStoryInsights getInstagramStoryInsights(String accountId, String storyId) {
+        return http.convert(
+                ApiClient.unwrap(
+                        http.get("/v1/accounts/" + accountId + "/instagram/stories/" + storyId + "/insights", null)),
+                InstagramStoryInsights.class);
+    }
+
+    /**
+     * Organizations a LinkedIn post can mention. People are not searchable: LinkedIn has no public
+     * person search, so a member mention needs a URN the caller already holds.
+     */
+    public List<LinkedInMention> searchLinkedInMentions(String accountId, String query) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("q", query);
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/linkedin/mentions", params)),
+                LinkedInMention.class);
     }
 }
