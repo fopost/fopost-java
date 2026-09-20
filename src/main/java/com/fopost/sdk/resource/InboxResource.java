@@ -9,6 +9,7 @@ import com.fopost.sdk.model.InboxApproval;
 import com.fopost.sdk.model.InboxApprovalDecision;
 import com.fopost.sdk.model.InboxConversation;
 import com.fopost.sdk.model.InboxConversationStarted;
+import com.fopost.sdk.model.InboxHandover;
 import com.fopost.sdk.model.InboxItem;
 import com.fopost.sdk.model.InboxPage;
 import com.fopost.sdk.model.InboxPageMeta;
@@ -239,6 +240,34 @@ public final class InboxResource {
         return ApiClient.unwrap(http.post("/v1/inbox/conversations/" + conversationId + "/typing", body))
                 .path("typing")
                 .asBoolean(false);
+    }
+
+    /** Take a Messenger thread back from whichever app holds it. Also needs {@code publish}. */
+    public InboxHandover takeThreadControl(String conversationId, String accountId) {
+        return handover(conversationId, accountId, null, null);
+    }
+
+    /** Pass a Messenger thread to another Meta app. Also needs {@code publish}. */
+    public InboxHandover passThreadControl(String conversationId, String accountId, String appId) {
+        return handover(conversationId, accountId, appId, null);
+    }
+
+    /**
+     * Pass a Messenger thread to another Meta app, or take it back when {@code appId} is null.
+     * Also needs {@code publish}.
+     */
+    public InboxHandover handover(String conversationId, String accountId, String appId, String metadata) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("account_id", accountId);
+        if (appId != null) {
+            body.put("app_id", appId);
+        }
+        if (metadata != null) {
+            body.put("metadata", metadata);
+        }
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/conversations/" + conversationId + "/handover", body)),
+                InboxHandover.class);
     }
 
     // ─── Approvals ────────────────────────────────────────────────────────────
