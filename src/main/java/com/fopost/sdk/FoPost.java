@@ -9,6 +9,7 @@ import com.fopost.sdk.internal.Version;
 import com.fopost.sdk.resource.AccountGroupsResource;
 import com.fopost.sdk.resource.AccountsResource;
 import com.fopost.sdk.resource.AdsResource;
+import com.fopost.sdk.resource.ActivityResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
@@ -74,6 +75,7 @@ public final class FoPost {
     private final ContactsResource contacts;
     private final BroadcastsResource broadcasts;
     private final SequencesResource sequences;
+    private final ActivityResource activity;
     private final InboxResource inbox;
     private final AdsResource ads;
     private final ValidateResource validate;
@@ -86,6 +88,7 @@ public final class FoPost {
         this.workspaces = new WorkspacesResource(http);
         this.knowledge = new KnowledgeResource(http);
         this.labels = new LabelsResource(http);
+        this.activity = new ActivityResource(http);
         this.webhooks = new WebhooksResource(http);
         this.analytics = new AnalyticsResource(http);
         this.automations = new AutomationsResource(http);
@@ -151,6 +154,10 @@ public final class FoPost {
 
     public MediaResource media() {
         return media;
+    }
+
+    public ActivityResource activity() {
+        return activity;
     }
 
     public AiResource ai() {
