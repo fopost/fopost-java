@@ -24,6 +24,20 @@ All notable changes to this project are documented here. The format follows
   custom columns a workspace keeps. All need the `inbox` scope.
 - `contacts().conversationAnalytics` reads `/v1/analytics/inbox/conversations`: volume and
   median reply time per thread. Needs the `analytics` scope.
+- Meta messaging settings on `accounts()`: `getIceBreakers`, `setIceBreakers` and
+  `deleteIceBreakers` (Facebook Pages and Instagram), plus `getPersistentMenu`,
+  `setPersistentMenu`, `deletePersistentMenu`, `getGreeting`, `setGreeting` and
+  `deleteGreeting` (Facebook Pages). A network without a field answers 400.
+- `accounts().getWebhookSubscription` reports whether the network is still delivering events
+  for an account, and `resubscribeWebhook` puts a lapsed subscription back.
+- `inbox().passThreadControl`, `takeThreadControl` and `handover` move a Messenger thread
+  between Meta apps (`inbox` scope, plus `publish`).
+- `knowledge()`: the workspace knowledge base — `list`, `create` (plus the
+  `createText`, `createUrl` and `createFile` shorthands), `update`, `delete`,
+  `sync` and `search`, with the `KnowledgeSource` and `KnowledgeMatch` records.
+  A source is an FAQ, a note, a URL on your own site or a plain-text/CSV media
+  item; `search` returns the passages closest to a question, and is what grounds
+  a drafted inbox reply in your own answers. Needs the `inbox` scope.
 
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
