@@ -18,6 +18,7 @@ import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
 import com.fopost.sdk.resource.ValidateResource;
 import com.fopost.sdk.resource.WebhooksResource;
+import com.fopost.sdk.resource.WhatsappResource;
 import com.fopost.sdk.resource.WorkspacesResource;
 import java.time.Duration;
 import java.util.Map;
@@ -66,6 +67,7 @@ public final class FoPost {
     private final AutomationsResource automations;
     private final MediaResource media;
     private final AiResource ai;
+    private final WhatsappResource whatsapp;
     private final InboxResource inbox;
     private final AdsResource ads;
     private final ValidateResource validate;
@@ -82,6 +84,7 @@ public final class FoPost {
         this.automations = new AutomationsResource(http);
         this.media = new MediaResource(http);
         this.ai = new AiResource(http);
+        this.whatsapp = new WhatsappResource(http);
         this.inbox = new InboxResource(http);
         this.ads = new AdsResource(http);
         this.validate = new ValidateResource(http);
@@ -122,6 +125,11 @@ public final class FoPost {
 
     public WebhooksResource webhooks() {
         return webhooks;
+    }
+
+    /** WhatsApp Business: templates, flows, groups, blocking and commerce. */
+    public WhatsappResource whatsapp() {
+        return whatsapp;
     }
 
     public AnalyticsResource analytics() {

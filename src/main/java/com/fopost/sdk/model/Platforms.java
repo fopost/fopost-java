@@ -44,9 +44,11 @@ public final class Platforms {
     public static final String WHOP = "whop";
     public static final String SKOOL = "skool";
 
+    public static final String WHATSAPP = "whatsapp";
+
     public static final List<String> ALL = List.of(
             TWITTER, LINKEDIN, FACEBOOK, INSTAGRAM, INSTAGRAM_BUSINESS, TELEGRAM, TWITCH, DISCORD,
             SLACK, REDDIT, PINTEREST, TUMBLR, DRIBBBLE, MEWE, TIKTOK, YOUTUBE, BLUESKY, THREADS,
             MASTODON, LEMMY, DEVTO, HASHNODE, MEDIUM, SUBSTACK, GOOGLE_BUSINESS, KICK, LISTMONK,
-            WORDPRESS, NOSTR, WHOP, SKOOL);
+            WORDPRESS, NOSTR, WHOP, SKOOL, WHATSAPP);
 }

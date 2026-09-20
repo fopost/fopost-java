@@ -8,6 +8,17 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `whatsapp()` for a WhatsApp Business connection: the business profile
+  (`getProfile`, `updateProfile`, `requestDisplayName`, `setUsername`), message
+  templates including the platform's own library (`listTemplates`,
+  `createTemplate`, `importTemplate`, …), groups, blocking, commerce settings and
+  flows (`createFlow`, `uploadFlowJson`, `publishFlow`, `listFlowResponses`, …),
+  plus `getAccountEvents`. All need the `accounts` scope.
+- `whatsapp().createSandboxSession` and `listSandboxSessions` invite a tester to
+  the platform-owned WhatsApp test number. Inviting sends a template, so it needs
+  the `publish` scope.
+- `Platforms.WHATSAPP`.
+
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.
