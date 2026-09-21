@@ -42,6 +42,7 @@ All notable changes to this project are documented here. The format follows
   A source is an FAQ, a note, a URL on your own site or a plain-text/CSV media
   item; `search` returns the passages closest to a question, and is what grounds
   a drafted inbox reply in your own answers. Needs the `inbox` scope.
+- `Platforms.SNAPCHAT`, included in `Platforms.ALL`.
 
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected

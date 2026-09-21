@@ -23,6 +23,7 @@ public final class Platforms {
     public static final String SLACK = "slack";
     public static final String REDDIT = "reddit";
     public static final String PINTEREST = "pinterest";
+    public static final String SNAPCHAT = "snapchat";
     public static final String TUMBLR = "tumblr";
     public static final String DRIBBBLE = "dribbble";
     public static final String MEWE = "mewe";
@@ -46,7 +47,7 @@ public final class Platforms {
 
     public static final List<String> ALL = List.of(
             TWITTER, LINKEDIN, FACEBOOK, INSTAGRAM, INSTAGRAM_BUSINESS, TELEGRAM, TWITCH, DISCORD,
-            SLACK, REDDIT, PINTEREST, TUMBLR, DRIBBBLE, MEWE, TIKTOK, YOUTUBE, BLUESKY, THREADS,
+            SLACK, REDDIT, PINTEREST, SNAPCHAT, TUMBLR, DRIBBBLE, MEWE, TIKTOK, YOUTUBE, BLUESKY, THREADS,
             MASTODON, LEMMY, DEVTO, HASHNODE, MEDIUM, SUBSTACK, GOOGLE_BUSINESS, KICK, LISTMONK,
             WORDPRESS, NOSTR, WHOP, SKOOL);
 }
