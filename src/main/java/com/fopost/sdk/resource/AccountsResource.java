@@ -7,6 +7,7 @@ import com.fopost.sdk.internal.Json;
 import com.fopost.sdk.model.Account;
 import com.fopost.sdk.model.AccountAnalyticsHistory;
 import com.fopost.sdk.model.AccountHealth;
+import com.fopost.sdk.model.AccountPlatformMetrics;
 import com.fopost.sdk.model.AccountValidation;
 import com.fopost.sdk.model.AccountsHealthSummary;
 import com.fopost.sdk.model.DiscordAck;
@@ -157,6 +158,21 @@ public final class AccountsResource {
         Map<String, Object> params = refresh ? query("refresh", "true") : null;
         return http.convert(
                 ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/health", params)), AccountHealth.class);
+    }
+
+    /**
+     * The numbers only this account's network reports, in its own vocabulary: ad-break
+     * earnings, story taps, a retention curve, the search terms behind a listing. Keyed by
+     * the platform's own metric names, read from the newest collected snapshot rather than
+     * fetched live. Needs the {@code analytics} scope.
+     *
+     * <p>A network whose metric access has not been granted yet answers 503
+     * ({@code platform_metrics_unavailable}) rather than an empty set.
+     */
+    public AccountPlatformMetrics platformMetrics(String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/insights", query("raw", "true"))),
+                AccountPlatformMetrics.class);
     }
 
     /** Make this the account a post targets by default, or clear the flag. Returns the new state. */
