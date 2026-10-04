@@ -61,7 +61,7 @@ src/main/java/com/fopost/sdk/
   resource/                PostsResource, AccountsResource (+ .communities()), WorkspacesResource,
                            LabelsResource, WebhooksResource, AnalyticsResource,
                            AutomationsResource, MediaResource, AiResource, CommunitiesResource,
-                           InboxResource, AdsResource, ValidateResource,
+                           InboxResource, AdsResource, GoogleAdsResource, ValidateResource,
                            BroadcastsResource, SequencesResource
 ```
 
@@ -81,7 +81,7 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `validate`. This is
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `googleAds`, `validate`. This is
 the most complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
 anything unwrapped.
 
@@ -107,6 +107,18 @@ anything unwrapped.
 - `ads` (scope `ads`) covers `/v1/ads/*`. Request bodies are camelCase; `boost`, `create`,
   `setStatus` and `delete` also need the `publish` scope, and a boost or ad starts paused unless
   `paused` is false. Say both in the javadoc of anything new that spends.
+- `googleAds` (scope `ads`) covers `/v1/ads/google/*` plus the GAQL passthrough at
+  `POST /v1/ads/insights/query`: recommendations, the optimization score, keywords, keyword
+  ideas, search terms, bid strategies, the ad schedule, negative keyword lists, assets,
+  Performance Max asset groups, Local Services leads and conversions. A connection on another
+  network answers 400, so this is the one resource that is not network-agnostic. Campaigns, ad
+  groups, ads, audiences, insights, labels, change history, experiments and conversion value
+  rules are all on `ads` and work on Google through the shared routes — do not duplicate them
+  here. `GoogleAdsScope` carries the connection and the customer, and renders snake_case on a
+  query and camelCase in a body, because the API takes it both ways. An object id is
+  `<customerId>~<kind>~<id>`: a Google resource name has slashes and cannot ride in a path
+  segment. Applying a recommendation changes what the live account serves or bids, so it needs
+  `publish`; dismissing one only hides it.
 
 ## API Contract
 

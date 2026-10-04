@@ -115,6 +115,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `providers`, `authorize`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `addAudienceCompanies`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `bidPricing`, `supplyForecast`, `conversionRules`, `createConversionRule`, `conversionRule`, `updateConversionRule`, `deleteConversionRule`, `attachConversionRule`, `detachConversionRule`, `conversionMetrics`, `sendConversionEvents` |
+| `googleAds()`  | `recommendations`, `optimizationScore`, `applyRecommendations`, `dismissRecommendations`, `keywords`, `createKeyword`, `updateKeyword`, `deleteKeyword`, `keywordIdeas`, `keywordMetrics`, `searchTerms`, `bidStrategies`, `createBidStrategy`, `adSchedule`, `setAdSchedule`, `negativeKeywordLists`, `createNegativeKeywordList`, `addNegativeKeywords`, `attachNegativeKeywordList`, `assets`, `createAsset`, `attachAsset`, `deleteAsset`, `assetGroups`, `createAssetGroup`, `updateAssetGroup`, `deleteAssetGroup`, `localServicesLeads`, `conversionActions`, `createConversionAction`, `uploadConversions`, `uploadConversionAdjustments`, `query` |
 | `googleBusiness()` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
 | `activity()`    | `list`                                                                                                                                                                                      |
@@ -323,6 +324,44 @@ client.ads().bulkSetStatus(BulkAdStatusParams.of(workspace.id(), connectionId, "
 Creating, updating, deleting and duplicating campaigns, ad sets and network ads, and
 `bulkSetStatus`, need the `publish` scope as well as `ads`. `leadsFeed` pages with a cursor: pass
 `nextCursor` back through `LeadsFeedParams.cursor(...)` until it is null.
+
+### Google Ads
+
+Campaigns, ad groups, ads, audiences, insights, labels, change history, experiments and
+conversion value rules are all on `ads()` and dispatch by connection, so they work on Google
+through the same calls as any other network. What only Google has is on `googleAds()`:
+
+```java
+var scope = GoogleAdsScope.of(connectionId, "1234567890");
+
+for (var recommendation : client.googleAds().recommendations(scope, List.of("KEYWORD"))) {
+    System.out.println(recommendation.type() + " -> " + recommendation.impact().potentialClicks());
+}
+
+client.googleAds().applyRecommendations(
+        GoogleAdsScope.of(connectionId, "1234567890").workspace(workspace.id()),
+        List.of("customers/1234567890/recommendations/ABC~1"));
+
+var ideas = client.googleAds().keywordIdeas(
+        new GoogleKeywordIdeasParams(scope).seeds(List.of("running shoes")));
+```
+
+Also here: `optimizationScore`, `keywords`, `createKeyword`, `updateKeyword`, `deleteKeyword`,
+`keywordMetrics`, `searchTerms`, `bidStrategies`, `createBidStrategy`, `adSchedule`,
+`setAdSchedule`, `negativeKeywordLists`, `createNegativeKeywordList`, `addNegativeKeywords`,
+`attachNegativeKeywordList`, `assets`, `createAsset`, `attachAsset`, `deleteAsset`,
+`assetGroups`, `createAssetGroup`, `updateAssetGroup`, `deleteAssetGroup`,
+`localServicesLeads`, `conversionActions`, `createConversionAction`, `uploadConversions`,
+`uploadConversionAdjustments`, and `query` for a raw read-only GAQL SELECT.
+
+An object id is `<customerId>~<kind>~<id>` — a Google resource name has slashes and cannot ride
+in a URL path segment, so every id carries the account it belongs to. The customer has to be an
+account the connection's grant reaches; any other answers 404. Amounts are in the account's
+currency, in minor units.
+
+Applying a recommendation changes what the live account serves or bids straight away, so it
+needs `publish` as well as `ads`; dismissing one only hides it. A connection on another network
+answers 400 on every call here.
 
 ## Validation
 
