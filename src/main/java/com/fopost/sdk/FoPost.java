@@ -17,6 +17,7 @@ import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.KnowledgeResource;
+import com.fopost.sdk.resource.GoogleAdsResource;
 import com.fopost.sdk.resource.GoogleBusinessResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
@@ -80,6 +81,7 @@ public final class FoPost {
     private final GoogleBusinessResource googleBusiness;
     private final InboxResource inbox;
     private final AdsResource ads;
+    private final GoogleAdsResource googleAds;
     private final ValidateResource validate;
 
     private FoPost(ApiClient http) {
@@ -102,6 +104,7 @@ public final class FoPost {
         this.broadcasts = new BroadcastsResource(http);
         this.sequences = new SequencesResource(http);
         this.ads = new AdsResource(http);
+        this.googleAds = new GoogleAdsResource(http);
         this.validate = new ValidateResource(http);
     }
 
@@ -196,6 +199,14 @@ public final class FoPost {
 
     public AdsResource ads() {
         return ads;
+    }
+
+    /**
+     * The Google Ads surface no other network has. Campaigns, ad groups, ads, audiences and
+     * insights are on {@link #ads()} and dispatch by connection.
+     */
+    public GoogleAdsResource googleAds() {
+        return googleAds;
     }
 
     public ValidateResource validate() {
