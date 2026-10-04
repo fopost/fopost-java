@@ -19,7 +19,7 @@ public final class InboxThreadParams {
 
     /**
      * Threads only: {@code comments} (the default) for threads under our posts, {@code mentions}
-     * for posts we were tagged in.
+     * for posts we were tagged in, {@code reviews} for one row per review left on the business.
      */
     public InboxThreadParams kind(String kind) {
         query.put("kind", kind);
