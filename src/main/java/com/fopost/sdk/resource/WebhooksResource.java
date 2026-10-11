@@ -1,5 +1,7 @@
 package com.fopost.sdk.resource;
 
+import com.fopost.sdk.WebhookEnvelope;
+import com.fopost.sdk.WebhookVerifier;
 import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.model.Webhook;
 import com.fopost.sdk.param.UpdateWebhookParams;
@@ -45,5 +47,13 @@ public final class WebhooksResource {
     /** Send a sample event to the endpoint, to check it is reachable and verifies the signature. */
     public void test(String webhookId) {
         http.post("/v1/webhooks/" + webhookId + "/test", null);
+    }
+
+    /**
+     * Check a delivery's signature and parse it. {@code rawBody} is the request body exactly as
+     * received. See {@link WebhookVerifier} for the rule and the failure codes.
+     */
+    public WebhookEnvelope verify(byte[] rawBody, Map<String, String> headers, String secret) {
+        return WebhookVerifier.verify(rawBody, headers, secret);
     }
 }
