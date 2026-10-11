@@ -8,6 +8,20 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `blog()`: articles for a website. `getSettings`, `updateSettings`, `rotateWebsiteSecret`
+  and `testWebsite`; `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword` and
+  `deleteKeyword`; `listArticles`, `requestArticle`, `getArticle`, `updateArticle`,
+  `regenerateArticle`, `publishArticle`, `rejectArticle` and `deleteArticle`, with the
+  `BlogSettings`, `BlogKeyword`, `BlogArticle`, `BlogArticleFull` and `BlogArticleImage`
+  records and the `BlogArticleStatus`, `BlogKeywordStatus` and `BlogTargetKind` constants.
+  Reads need `posts`; planning, requesting and regenerating spend AI credits and need `ai`;
+  publishing needs `publish`.
+- `WebhookVerifier.verify` checks a delivery's signature over the raw bytes in constant time,
+  preferring the timestamped `X-FoPost-Signature-256` within 300 seconds and falling back to
+  `X-FoPost-Signature` when no timestamp is sent, then returns the parsed `WebhookEnvelope`.
+  Also reachable as `webhooks().verify`. `WebhookEvents.ARTICLE_PUBLISHED` and the
+  `BlogArticlePublished` record type its payload.
+
 - `InboxItem.moderationStatus` carries the platform's own state for a comment
   (`published`, `held`, `spam`, `rejected`), and `InboxAccount.reconnectRequired`
   flags an account connected before the inbox asked for a permission it needs.

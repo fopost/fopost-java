@@ -102,7 +102,8 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `getIceBreakers`, `setIceBreakers`, `deleteIceBreakers`, `getPersistentMenu`, `setPersistentMenu`, `deletePersistentMenu`, `getGreeting`, `setGreeting`, `deleteGreeting`, `getWebhookSubscription`, `resubscribeWebhook`, `communities()`, `listDiscordChannels`, `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`, `listDiscordPins`, `deleteDiscordMessage`, `pinDiscordMessage`, `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`, `sendDiscordDm`, `listDiscordEvents`, `getDiscordEvent`, `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`, `listDiscordMembers`, `getDiscordMember`, `listDiscordRoles`, `createDiscordRole`, `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole`, `removeDiscordMemberRole`, `platformMetrics` |
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
-| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                 |
+| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `verify`                                                                                                                                       |
+| `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
@@ -203,6 +204,50 @@ Webhook hook = client.webhooks().create(
 System.out.println(hook.secret());
 client.webhooks().test(hook.id());
 ```
+
+## Blog
+
+A post goes to a social network; an article goes to a website. `blog()` holds the keyword plan,
+the articles the writer produces, and the settings that say where they are published:
+`BlogTargetKind.PRODUCT_BLOG`, a connected `ACCOUNT`, or your own `WEBSITE`, which receives each
+published article as a signed webhook.
+
+```java
+BlogArticle article = client.blog().requestArticle(
+        workspace.id(),
+        BlogParams.Article.create()
+                .keyword("how to schedule posts")
+                .instructions("Lead with the calendar view."));
+
+// Poll until the status leaves queued and writing, then read the body.
+BlogArticleFull draft = client.blog().getArticle(workspace.id(), article.id());
+client.blog().publishArticle(workspace.id(), article.id());
+```
+
+Reads, settings and keyword edits need `posts`; `planKeywords`, `requestArticle` and
+`regenerateArticle` spend AI credits and need `ai` (an empty balance is a
+`PaymentRequiredException`); `publishArticle` needs `publish` and answers 409 `no_target` until
+a target is set. Setting `websiteUrl` issues the site's signing secret once, on
+`BlogSettingsUpdate.websiteSecret()`; `rotateWebsiteSecret` issues a new one.
+
+To verify a delivery, hand `WebhookVerifier` the raw request bytes, the headers and the secret.
+It prefers the timestamped signature, refuses one more than 300 seconds old, and falls back to
+the body-only signature when no timestamp header is present. The same call is on
+`client.webhooks().verify(...)`.
+
+```java
+byte[] rawBody = request.getInputStream().readAllBytes();
+WebhookEnvelope envelope = WebhookVerifier.verify(rawBody, headers, System.getenv("FOPOST_WEBHOOK_SECRET"));
+
+if (WebhookEvents.ARTICLE_PUBLISHED.equals(envelope.event())) {
+    BlogArticlePublished published = envelope.data(BlogArticlePublished.class);
+    store(published.slug(), published.bodyHtml());
+}
+```
+
+A failed check is a `FoPostException` with code `missing_signature`, `invalid_signature`,
+`stale_timestamp` or `invalid_payload`. Image URLs in the payload are fetchable for six hours;
+download and store your own copy.
 
 ## AI features
 
