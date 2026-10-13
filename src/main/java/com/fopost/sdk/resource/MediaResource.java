@@ -4,18 +4,23 @@ import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.internal.Multipart;
 import com.fopost.sdk.model.MediaLibraryItem;
 import com.fopost.sdk.model.PresignedUpload;
+import com.fopost.sdk.model.UploadLimits;
 import com.fopost.sdk.model.UploadedMedia;
+import com.fopost.sdk.param.FileInput;
 import com.fopost.sdk.param.PresignUploadParams;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URLConnection;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** The workspace media library. Upload once, then attach the returned url to a content block. */
+/**
+ * The workspace media library. Upload once, then attach the returned url to a content block.
+ *
+ * <p>A multipart {@link #upload} carries at most {@link UploadLimits#multipartMaxFileBytes()} per
+ * file; a larger file goes through {@link #uploadDirect}, up to {@link UploadLimits#maxFileBytes()}.
+ * Either answers {@code 413} with code {@code file_too_large} past the ceiling, and the body on
+ * the exception carries {@code max_file_bytes}.
+ */
 public final class MediaResource {
 
     private final ApiClient http;
@@ -30,11 +35,19 @@ public final class MediaResource {
         return http.convertList(ApiClient.unwrap(http.get("/v1/media", query)), MediaLibraryItem.class);
     }
 
-    /** Upload one or more files. Each is checked against the plan's storage allowance. */
+    /** The account's upload ceilings. {@code workspaceId} may be null. */
+    public UploadLimits limits(String workspaceId) {
+        Map<String, Object> query = new LinkedHashMap<>();
+        query.put("workspaceId", workspaceId);
+        return http.convert(ApiClient.unwrap(http.get("/v1/media/limits", query)), UploadLimits.class);
+    }
+
+    /** Upload one or more files in one multipart request. Each is checked against the storage allowance. */
     public List<UploadedMedia> upload(String workspaceId, Path... files) {
         Multipart body = new Multipart();
         for (Path file : files) {
-            body.file("files", file.getFileName().toString(), contentType(file), read(file));
+            FileInput input = FileInput.of(file);
+            body.file("files", input.filename(), input.mimeType(), input.source(), input.size());
         }
         body.field("workspaceId", workspaceId);
         return http.convertList(
@@ -65,26 +78,23 @@ public final class MediaResource {
 
     /** Presign, send the bytes to the upload URL with the returned headers, then complete. */
     public UploadedMedia uploadDirect(String workspaceId, String filename, String mimeType, byte[] data) {
-        PresignedUpload presigned = presign(PresignUploadParams.of(workspaceId, filename, mimeType, data.length));
-        http.sendRaw(presigned.method(), presigned.uploadUrl(), presigned.headers(), data);
+        return uploadDirect(workspaceId, FileInput.of(filename, mimeType, data));
+    }
+
+    /** The same three steps, streaming the file from its source rather than from memory. */
+    public UploadedMedia uploadDirect(String workspaceId, FileInput file) {
+        return uploadDirect(PresignUploadParams.of(workspaceId, file), file);
+    }
+
+    /** As above, with the reservation's optional fields (folder, brand role, consent) set on {@code params}. */
+    public UploadedMedia uploadDirect(PresignUploadParams params, FileInput file) {
+        PresignedUpload presigned = presign(params);
+        http.sendRaw(presigned.method(), presigned.uploadUrl(), presigned.headers(), file.source(), file.size());
         return complete(presigned.uploadId());
     }
 
     /** Removes the file from the library. Posts already published keep the copy on the platform. */
     public void delete(String mediaId) {
         http.delete("/v1/media/" + mediaId);
-    }
-
-    private static String contentType(Path file) {
-        String guessed = URLConnection.guessContentTypeFromName(file.getFileName().toString());
-        return guessed == null ? "application/octet-stream" : guessed;
-    }
-
-    private static byte[] read(Path path) {
-        try {
-            return Files.readAllBytes(path);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }
