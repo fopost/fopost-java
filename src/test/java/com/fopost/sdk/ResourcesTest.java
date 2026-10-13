@@ -134,7 +134,8 @@ class ResourcesTest {
         assertEquals("PUT", put.method());
         assertEquals("https://bucket.test/u1?sig=abc", put.url());
         assertEquals(Map.of("Content-Type", "image/png"), put.headers());
-        assertArrayEquals(new byte[] {1, 2, 3}, put.body());
+        assertArrayEquals(new byte[] {1, 2, 3}, FakeTransport.bodyOf(put));
+        assertEquals(3L, put.bodyLength());
 
         var complete = transport.requests.get(2);
         assertEquals("POST", complete.method());

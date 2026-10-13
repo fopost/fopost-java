@@ -2,12 +2,16 @@ package com.fopost.sdk.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fopost.sdk.internal.ApiClient;
+import com.fopost.sdk.internal.Json;
 import com.fopost.sdk.internal.Multipart;
+import com.fopost.sdk.FoPostException;
 import com.fopost.sdk.model.BulkActionResult;
 import com.fopost.sdk.model.BulkImportResult;
 import com.fopost.sdk.model.BulkImportValidation;
 import com.fopost.sdk.model.CancelResult;
+import com.fopost.sdk.model.ContentBlock;
 import com.fopost.sdk.model.Delivery;
+import com.fopost.sdk.model.MediaItem;
 import com.fopost.sdk.model.DuplicatedPost;
 import com.fopost.sdk.model.Page;
 import com.fopost.sdk.model.PageMeta;
@@ -17,7 +21,10 @@ import com.fopost.sdk.model.PreflightResult;
 import com.fopost.sdk.model.PublishResult;
 import com.fopost.sdk.model.PublishRun;
 import com.fopost.sdk.model.RetryResult;
+import com.fopost.sdk.model.UploadLimits;
+import com.fopost.sdk.model.UploadedMedia;
 import com.fopost.sdk.param.CreatePostParams;
+import com.fopost.sdk.param.FileInput;
 import com.fopost.sdk.param.PostListParams;
 import com.fopost.sdk.param.PublishParams;
 import com.fopost.sdk.param.RetryParams;
@@ -41,11 +48,14 @@ import java.util.stream.StreamSupport;
 public final class PostsResource {
 
     private static final int DEFAULT_PER_PAGE = 30;
+    private static final long DEFAULT_MULTIPART_MAX_FILE_BYTES = 100L * 1024 * 1024;
 
     private final ApiClient http;
+    private final MediaResource media;
 
     public PostsResource(ApiClient http) {
         this.http = http;
+        this.media = new MediaResource(http);
     }
 
     // ─── Reading ──────────────────────────────────────────────────────────────
@@ -88,11 +98,59 @@ public final class PostsResource {
     // ─── Writing ──────────────────────────────────────────────────────────────
 
     public Post create(CreatePostParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/posts", params.toMap())), Post.class);
+        return create(params, List.of());
+    }
+
+    /**
+     * Create a post with files attached to its first content block.
+     *
+     * <p>Files within the account's multipart ceiling ride along in one multipart request; larger
+     * ones are uploaded directly to the library first. Either way they end up on the first block,
+     * and an oversize file answers {@code 413} with code {@code file_too_large}.
+     */
+    public Post create(CreatePostParams params, List<FileInput> files) {
+        Map<String, Object> body = params.toMap();
+        if (files == null || files.isEmpty()) {
+            return http.convert(ApiClient.unwrap(http.post("/v1/posts", body)), Post.class);
+        }
+        if (fitsMultipart(files, (String) body.get("workspace_id"))) {
+            return http.convert(
+                    ApiClient.unwrap(http.request("POST", "/v1/posts", withFiles(body, files), null)), Post.class);
+        }
+        List<Map<String, Object>> content = blocks(body.get("content"));
+        appendMedia(content, uploadAll((String) body.get("workspace_id"), files));
+        body.put("content", content);
+        return http.convert(ApiClient.unwrap(http.post("/v1/posts", body)), Post.class);
     }
 
     public Post update(String postId, UpdatePostParams params) {
-        return http.convert(ApiClient.unwrap(http.put("/v1/posts/" + postId, params.toMap())), Post.class);
+        return update(postId, params, List.of());
+    }
+
+    /**
+     * Update a post and attach files to its first content block, by the same route rule as
+     * {@link #create(CreatePostParams, List)}. Without new content the post is read first so the
+     * files are appended to what is already there.
+     */
+    public Post update(String postId, UpdatePostParams params, List<FileInput> files) {
+        Map<String, Object> body = params.toMap();
+        if (files == null || files.isEmpty()) {
+            return http.convert(ApiClient.unwrap(http.put("/v1/posts/" + postId, body)), Post.class);
+        }
+        if (fitsMultipart(files, null)) {
+            return http.convert(
+                    ApiClient.unwrap(http.request("PUT", "/v1/posts/" + postId, withFiles(body, files), null)),
+                    Post.class);
+        }
+        Post existing = null;
+        if (!body.containsKey("content")) {
+            existing = get(postId);
+        }
+        List<Map<String, Object>> content =
+                existing == null ? blocks(body.get("content")) : blocksOf(existing.content());
+        appendMedia(content, uploadAll(existing == null ? null : existing.workspaceId(), files));
+        body.put("content", content);
+        return http.convert(ApiClient.unwrap(http.put("/v1/posts/" + postId, body)), Post.class);
     }
 
     public void delete(String postId) {
@@ -224,6 +282,112 @@ public final class PostsResource {
     /** Delete every post a committed batch created. */
     public void rollbackImport(String batchId) {
         http.delete("/v1/posts/bulk-import/" + batchId);
+    }
+
+    // ─── Files on posts ───────────────────────────────────────────────────────
+
+    private boolean fitsMultipart(List<FileInput> files, String workspaceId) {
+        long ceiling = DEFAULT_MULTIPART_MAX_FILE_BYTES;
+        try {
+            UploadLimits limits = media.limits(workspaceId);
+            if (limits != null && limits.multipartMaxFileBytes() != null) {
+                ceiling = limits.multipartMaxFileBytes();
+            }
+        } catch (FoPostException ignored) {
+            // The server enforces the ceiling either way; the default only picks the route.
+        }
+        for (FileInput file : files) {
+            if (file.size() > ceiling) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Multipart withFiles(Map<String, Object> body, List<FileInput> files) {
+        Multipart multipart;
+        try {
+            multipart = new Multipart().field("post", Json.MAPPER.writeValueAsString(body));
+        } catch (IOException e) {
+            throw new FoPostException("fopost: could not encode the request body", e);
+        }
+        for (FileInput file : files) {
+            multipart.file("files", file.filename(), file.mimeType(), file.source(), file.size());
+        }
+        return multipart;
+    }
+
+    private List<MediaItem> uploadAll(String workspaceId, List<FileInput> files) {
+        List<MediaItem> items = new ArrayList<>();
+        for (FileInput file : files) {
+            UploadedMedia uploaded = media.uploadDirect(workspaceId, file);
+            items.add(new MediaItem(file.mediaType(), uploaded.name(), uploaded.url(), uploaded.size(), null, null));
+        }
+        return items;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> blocks(Object content) {
+        List<Map<String, Object>> copy = new ArrayList<>();
+        if (content instanceof List<?> list) {
+            for (Object block : list) {
+                copy.add(new LinkedHashMap<>((Map<String, Object>) block));
+            }
+        }
+        return copy;
+    }
+
+    private static List<Map<String, Object>> blocksOf(List<ContentBlock> content) {
+        List<Map<String, Object>> copy = new ArrayList<>();
+        if (content == null) {
+            return copy;
+        }
+        for (ContentBlock block : content) {
+            Map<String, Object> encoded = new LinkedHashMap<>();
+            encoded.put("text", block.text() == null ? "" : block.text());
+            if (block.media() != null && !block.media().isEmpty()) {
+                encoded.put("media", encode(block.media()));
+            }
+            copy.add(encoded);
+        }
+        return copy;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void appendMedia(List<Map<String, Object>> content, List<MediaItem> items) {
+        if (content.isEmpty()) {
+            Map<String, Object> block = new LinkedHashMap<>();
+            block.put("text", "");
+            content.add(block);
+        }
+        Map<String, Object> first = content.get(0);
+        List<Map<String, Object>> media = new ArrayList<>();
+        if (first.get("media") instanceof List<?> existing) {
+            media.addAll((List<Map<String, Object>>) existing);
+        }
+        media.addAll(encode(items));
+        first.put("media", media);
+    }
+
+    private static List<Map<String, Object>> encode(List<MediaItem> items) {
+        List<Map<String, Object>> encoded = new ArrayList<>();
+        for (MediaItem item : items) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            put(entry, "type", item.type());
+            put(entry, "name", item.name());
+            put(entry, "url", item.url());
+            put(entry, "size", item.size());
+            put(entry, "alt", item.alt());
+            put(entry, "thumbnail", item.thumbnail());
+            encoded.add(entry);
+        }
+        return encoded;
+    }
+
+    private static void put(Map<String, Object> into, String key, Object value) {
+        if (value != null) {
+            into.put(key, value);
+        }
     }
 
     private static Multipart csvUpload(String filename, byte[] csv, String workspaceId) {
