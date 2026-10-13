@@ -8,6 +8,29 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `media().limits(workspaceId)` reads `GET /v1/media/limits` into `UploadLimits`: the account's
+  largest file by any route (100 MB up to 2 connected accounts, 400 MB up to 7, 2 GB up to 15,
+  5 GB beyond or with the Large Uploads add-on), the per-file multipart ceiling, the next tier,
+  and the allowed types.
+- `posts().create(params, files)` and `posts().update(id, params, files)` attach `FileInput`s to
+  the first content block. Files within the multipart ceiling ride in one `multipart/form-data`
+  request (`post` JSON field plus `files` parts); larger ones are uploaded directly and attached
+  as media items before the usual JSON request. An update without new content reads the post
+  first and appends to its first block.
+- `FileInput` describes a file to upload from a `Path`, an `InputStream` with a known size, or a
+  byte array. `media().uploadDirect(workspaceId, FileInput)` and `uploadDirect(PresignUploadParams,
+  FileInput)` stream it to the upload URL rather than holding it in memory.
+- `PresignUploadParams` takes `folderId`, `origin`, `brandRole`, `brandVoiceId` and
+  `personConsent`; `PresignedUpload.maxFileBytes` reports the ceiling at reservation time.
+
+### Changed
+
+- Presign and direct upload accept sizes up to 5 GB; there is no 50 MB ceiling in the SDK.
+- An oversize file is a `413` with code `file_too_large`. It surfaces as a `FoPostException`
+  with `status()` 413 and `max_file_bytes`, `file_bytes` and `upgrade_url` on `body()`.
+- Multipart bodies and direct uploads stream from their source. `HttpRequestData` gained
+  `bodyStream` and `bodyLength` beside `body`; a custom `Transport` must send whichever is set.
+
 - `InboxItem.moderationStatus` carries the platform's own state for a comment
   (`published`, `held`, `spam`, `rejected`), and `InboxAccount.reconnectRequired`
   flags an account connected before the inbox asked for a permission it needs.
