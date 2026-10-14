@@ -3,6 +3,9 @@ package com.fopost.sdk;
 import com.fopost.sdk.internal.HttpRequestData;
 import com.fopost.sdk.internal.HttpResponseData;
 import com.fopost.sdk.internal.Transport;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -43,8 +46,21 @@ final class FakeTransport implements Transport {
     }
 
     String lastBody() {
-        byte[] body = last().body();
-        return body == null ? "" : new String(body, StandardCharsets.UTF_8);
+        return new String(bodyOf(last()), StandardCharsets.UTF_8);
+    }
+
+    static byte[] bodyOf(HttpRequestData request) {
+        if (request.body() != null) {
+            return request.body();
+        }
+        if (request.bodyStream() == null) {
+            return new byte[0];
+        }
+        try (InputStream in = request.bodyStream().get()) {
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     int callCount() {

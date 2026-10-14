@@ -11,6 +11,7 @@ import com.fopost.sdk.PermissionDeniedException;
 import com.fopost.sdk.RateLimitException;
 import com.fopost.sdk.ValidationException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -20,6 +21,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Internal HTTP layer: auth headers, query encoding, JSON coding, the {@code {"data": ...}}
@@ -86,29 +88,31 @@ public final class ApiClient {
 
     /** Send a request and return the decoded body, retrying while the API answers 429. */
     public JsonNode request(String method, String path, Object body, Map<String, Object> query) {
-        byte[] encoded = null;
-        String contentType = null;
+        Map<String, String> headers = baseHeaders();
+        String url = url(path, query);
+        HttpRequestData request;
         if (body instanceof Multipart multipart) {
-            contentType = multipart.contentType();
-            encoded = multipart.build();
+            headers.put("Content-Type", multipart.contentType());
+            request = new HttpRequestData(method, url, headers, null, multipart::open, multipart.length());
         } else if (body != null) {
-            contentType = "application/json";
-            encoded = encode(body);
+            headers.put("Content-Type", "application/json");
+            request = new HttpRequestData(method, url, headers, encode(body));
+        } else {
+            request = new HttpRequestData(method, url, headers, null);
         }
-        return send(method, path, encoded, contentType, query);
+        return send(request);
     }
 
-    private JsonNode send(String method, String path, byte[] body, String contentType, Map<String, Object> query) {
+    private Map<String, String> baseHeaders() {
         Map<String, String> headers = new LinkedHashMap<>();
         headers.put("Accept", "application/json");
         headers.put("X-API-Key", apiKey);
         headers.put("User-Agent", USER_AGENT);
-        if (contentType != null) {
-            headers.put("Content-Type", contentType);
-        }
+        return headers;
+    }
 
-        String url = url(path, query);
-        HttpRequestData request = new HttpRequestData(method, url, headers, body);
+    private JsonNode send(HttpRequestData request) {
+        String url = request.url();
 
         int attempt = 0;
         while (true) {
@@ -137,8 +141,17 @@ public final class ApiClient {
      * the PUT to a presigned upload URL, where the SDK's own headers would break the signature.
      */
     public void sendRaw(String method, String url, Map<String, String> headers, byte[] body) {
-        Map<String, String> sent = headers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(headers);
-        HttpRequestData request = new HttpRequestData(method, url, sent, body);
+        sendRaw(new HttpRequestData(method, url, copy(headers), body));
+    }
+
+    /** The streaming form of {@link #sendRaw(String, String, Map, byte[])}; {@code length} is exact. */
+    public void sendRaw(
+            String method, String url, Map<String, String> headers, Supplier<InputStream> body, long length) {
+        sendRaw(new HttpRequestData(method, url, copy(headers), null, body, length));
+    }
+
+    private void sendRaw(HttpRequestData request) {
+        String url = request.url();
         HttpResponseData response;
         try {
             response = transport.send(request);
@@ -310,6 +323,10 @@ public final class ApiClient {
         } catch (RuntimeException ignored) {
             return null;
         }
+    }
+
+    private static Map<String, String> copy(Map<String, String> headers) {
+        return headers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(headers);
     }
 
     private static Duration min(Duration a, Duration b) {

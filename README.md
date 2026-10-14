@@ -106,7 +106,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
-| `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
+| `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `passThreadControl`, `takeThreadControl`, `handover`, `listApprovals`, `approveReply`, `rejectReply` |
 | `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
@@ -179,17 +179,69 @@ client.posts().create(CreatePostParams.of(workspace.id())
 ```
 
 A direct upload sends the bytes to storage instead of through the API. `uploadDirect` does the
-three steps in one call; `presign` and `complete` are the steps themselves, for a client that
+three steps in one call and streams the file from a `Path` or an `InputStream`, so a multi-gigabyte
+upload never sits in memory; `presign` and `complete` are the steps themselves, for a client that
 sends the bytes some other way:
 
 ```java
-UploadedMedia file = client.media().uploadDirect(workspace.id(), "chart.png", "image/png", bytes);
+UploadedMedia file = client.media().uploadDirect(workspace.id(), FileInput.of(Path.of("launch.mp4")));
 
 PresignedUpload reserved = client.media().presign(
-        PresignUploadParams.of(workspace.id(), "chart.png", "image/png", bytes.length));
+        PresignUploadParams.of(workspace.id(), "chart.png", "image/png", bytes.length)
+                .folderId(folderId)
+                .brandRole("logo"));
 // PUT bytes to reserved.uploadUrl() with reserved.headers(), then:
 UploadedMedia same = client.media().complete(reserved.uploadId());
 ```
+
+`PresignUploadParams` also takes `origin("chat")`, `brandVoiceId`, and `personConsent(subject,
+statement)`, which a `brandRole` of `person` requires.
+
+### Upload limits
+
+How large a file may be depends on the account: 100 MB with up to 2 connected accounts, 400 MB up
+to 7, 2 GB up to 15, 5 GB beyond that or with the Large Uploads add-on. `limits` reports the
+ceilings; `multipartMaxFileBytes` (100 MB) is the most `upload` or a post request carries per file,
+and anything larger has to go through `uploadDirect`:
+
+```java
+UploadLimits limits = client.media().limits(workspace.id());
+limits.maxFileBytes();           // the largest file by any route
+limits.multipartMaxFileBytes();  // the per-file ceiling of a multipart request
+limits.nextTier();               // what more connected accounts would unlock, or null
+```
+
+A file past the ceiling answers `413` with code `file_too_large`. It arrives as a `FoPostException`
+whose `status()` is `413` and whose `body()` carries `max_file_bytes`, `file_bytes` and `upgrade_url`:
+
+```java
+try {
+    client.media().upload(workspace.id(), Path.of("huge.mov"));
+} catch (FoPostException e) {
+    if (e.status() == 413) {
+        long max = ((JsonNode) e.body()).path("max_file_bytes").asLong();
+    }
+}
+```
+
+### Files on posts
+
+`posts().create` and `posts().update` take a list of files and attach them to the first content
+block, so there is no separate upload step:
+
+```java
+Post post = client.posts().create(
+        CreatePostParams.of(workspace.id()).accounts(accountId).content("Launch day"),
+        List.of(FileInput.of(Path.of("launch.mp4")), FileInput.of("chart.png", "image/png", bytes)));
+
+client.posts().update(post.id(), UpdatePostParams.create(), List.of(FileInput.of(Path.of("more.png"))));
+```
+
+The SDK picks the route. When every file fits the multipart ceiling it sends one
+`multipart/form-data` request to the post endpoint, with the JSON body in a `post` field and the
+files under `files` (at most five). Otherwise it uploads each file directly, then sends the usual
+JSON request with the results attached as media items. An update without new content reads the
+post first and appends to what its first block already holds.
 
 ## Webhooks
 
