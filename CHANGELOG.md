@@ -8,6 +8,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `blog()`: articles for a website. `getSettings`, `updateSettings`, `rotateWebsiteSecret`
+  and `testWebsite`; `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword` and
+  `deleteKeyword`; `listArticles`, `requestArticle`, `getArticle`, `updateArticle`,
+  `regenerateArticle`, `publishArticle`, `rejectArticle` and `deleteArticle`, with the
+  `BlogSettings`, `BlogKeyword`, `BlogArticle`, `BlogArticleFull` and `BlogArticleImage`
+  records and the `BlogArticleStatus`, `BlogKeywordStatus` and `BlogTargetKind` constants.
+  Reads need `posts`; planning, requesting and regenerating spend AI credits and need `ai`;
+  publishing needs `publish`.
+- `WebhookVerifier.verify` checks a delivery's signature over the raw bytes in constant time,
+  preferring the timestamped `X-FoPost-Signature-256` within 300 seconds and falling back to
+  `X-FoPost-Signature` when no timestamp is sent, then returns the parsed `WebhookEnvelope`.
+  Also reachable as `webhooks().verify`. `WebhookEvents.ARTICLE_PUBLISHED` and the
+  `BlogArticlePublished` record type its payload.
 - `media().limits(workspaceId)` reads `GET /v1/media/limits` into `UploadLimits`: the account's
   largest file by any route (100 MB up to 2 connected accounts, 400 MB up to 7, 2 GB up to 15,
   5 GB beyond or with the Large Uploads add-on), the per-file multipart ceiling, the next tier,
@@ -22,14 +35,6 @@ All notable changes to this project are documented here. The format follows
   FileInput)` stream it to the upload URL rather than holding it in memory.
 - `PresignUploadParams` takes `folderId`, `origin`, `brandRole`, `brandVoiceId` and
   `personConsent`; `PresignedUpload.maxFileBytes` reports the ceiling at reservation time.
-
-### Changed
-
-- Presign and direct upload accept sizes up to 5 GB; there is no 50 MB ceiling in the SDK.
-- An oversize file is a `413` with code `file_too_large`. It surfaces as a `FoPostException`
-  with `status()` 413 and `max_file_bytes`, `file_bytes` and `upgrade_url` on `body()`.
-- Multipart bodies and direct uploads stream from their source. `HttpRequestData` gained
-  `bodyStream` and `bodyLength` beside `body`; a custom `Transport` must send whichever is set.
 
 - `InboxItem.moderationStatus` carries the platform's own state for a comment
   (`published`, `held`, `spam`, `rejected`), and `InboxAccount.reconnectRequired`
@@ -70,6 +75,14 @@ All notable changes to this project are documented here. The format follows
 - `accounts()`: `listSlackChannels`, `listSlackMembers`, `getSlackIdentity` and
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.
+
+### Changed
+
+- Presign and direct upload accept sizes up to 5 GB; there is no 50 MB ceiling in the SDK.
+- An oversize file is a `413` with code `file_too_large`. It surfaces as a `FoPostException`
+  with `status()` 413 and `max_file_bytes`, `file_bytes` and `upgrade_url` on `body()`.
+- Multipart bodies and direct uploads stream from their source. `HttpRequestData` gained
+  `bodyStream` and `bodyLength` beside `body`; a custom `Transport` must send whichever is set.
 
 ## [0.3.0] - 2026-09-19
 

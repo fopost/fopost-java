@@ -62,7 +62,8 @@ src/main/java/com/fopost/sdk/
                            LabelsResource, WebhooksResource, AnalyticsResource,
                            AutomationsResource, MediaResource, AiResource, CommunitiesResource,
                            InboxResource, AdsResource, GoogleAdsResource, ValidateResource,
-                           BroadcastsResource, SequencesResource
+                           BroadcastsResource, SequencesResource, BlogResource
+  WebhookVerifier.java     signature check over the raw bytes; WebhookEnvelope is what it returns
 ```
 
 **Request flow.** `client.posts().create(params)` → `PostsResource` builds the body and calls
@@ -81,7 +82,7 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `googleAds`, `validate`. This is
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `googleAds`, `blog`, `validate`. This is
 the most complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
 anything unwrapped.
 
