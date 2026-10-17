@@ -8,6 +8,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `blog().suggestSeeds(workspaceId[, seeds, prompt])` suggests about 10 search terms from the
+  blog goal and topics (needs `ai`, 402 on an empty balance), and `blog().submitArticle` moves a
+  draft, failed or rejected article to `in_review` (needs `posts`, 409 otherwise).
+- `BlogSettings` gains `goal`, `focusTopics`, `avoidTopics` and `planRun` (`BlogPlanRun`:
+  `status`, `error`, `added`, `finishedAt`); `BlogParams.Settings` gains `goal`, `focusTopics`
+  and `avoidTopics`, with the `BlogGoal` constants. `BlogKeyword.fitReason` says why a keyword
+  serves the goal.
+- `BlogArticleStatus.IN_REVIEW`.
 - `whatsapp()` for a WhatsApp Business connection: the business profile
   (`getProfile`, `updateProfile`, `requestDisplayName`, `setUsername`), message
   templates including the platform's own library (`listTemplates`,
@@ -88,11 +96,22 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `blog().planKeywords` no longer fills the calendar: results land as `suggested` keywords, and
+  setting one to `planned` with `updateKeyword` picks it and gives it the next free date.
+- `blog().publishArticle` and `publishAt` on `updateArticle` need an article in review (or
+  already scheduled or failed); a draft answers 409 until it is submitted.
+- `BlogSettings.reviewHoldDays` is now the number of days before its planned date that a picked
+  keyword starts being written.
 - Presign and direct upload accept sizes up to 5 GB; there is no 50 MB ceiling in the SDK.
 - An oversize file is a `413` with code `file_too_large`. It surfaces as a `FoPostException`
   with `status()` 413 and `max_file_bytes`, `file_bytes` and `upgrade_url` on `body()`.
 - Multipart bodies and direct uploads stream from their source. `HttpRequestData` gained
   `bodyStream` and `bodyLength` beside `body`; a custom `Transport` must send whichever is set.
+
+### Removed
+
+- **Breaking:** `BlogSettings.autoPublish` and `BlogParams.Settings.autoPublish(...)`. Every
+  article now goes through `submitArticle` before it publishes.
 
 ## [0.3.0] - 2026-09-19
 

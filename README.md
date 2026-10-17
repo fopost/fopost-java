@@ -103,7 +103,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `verify`                                                                                                                                       |
-| `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
+| `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
 | `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
@@ -266,6 +266,27 @@ the articles the writer produces, and the settings that say where they are publi
 `BlogTargetKind.PRODUCT_BLOG`, a connected `ACCOUNT`, or your own `WEBSITE`, which receives each
 published article as a signed webhook.
 
+Planning starts from the blog's goal. Suggest search terms, research them, then pick the keywords
+worth writing; a picked keyword takes the next free date on the calendar.
+
+```java
+client.blog().updateSettings(
+        workspace.id(),
+        BlogParams.Settings.create().goal(BlogGoal.LEADS).focusTopics("Scheduling for small teams"));
+
+List<String> seeds = client.blog().suggestSeeds(workspace.id(), List.of(), "Beginners, not agencies");
+client.blog().planKeywords(workspace.id(), seeds);
+
+for (BlogKeyword keyword : client.blog().listKeywords(
+        workspace.id(), BlogParams.Filter.create().status(BlogKeywordStatus.SUGGESTED).limit(3))) {
+    client.blog().updateKeyword(
+            workspace.id(), keyword.id(), BlogParams.KeywordUpdate.create().status(BlogKeywordStatus.PLANNED));
+}
+```
+
+Every article is approved before it publishes: submit a draft for review, then publish it or give
+it a `publishAt`.
+
 ```java
 BlogArticle article = client.blog().requestArticle(
         workspace.id(),
@@ -275,13 +296,14 @@ BlogArticle article = client.blog().requestArticle(
 
 // Poll until the status leaves queued and writing, then read the body.
 BlogArticleFull draft = client.blog().getArticle(workspace.id(), article.id());
+client.blog().submitArticle(workspace.id(), article.id());
 client.blog().publishArticle(workspace.id(), article.id());
 ```
 
-Reads, settings and keyword edits need `posts`; `planKeywords`, `requestArticle` and
-`regenerateArticle` spend AI credits and need `ai` (an empty balance is a
-`PaymentRequiredException`); `publishArticle` needs `publish` and answers 409 `no_target` until
-a target is set. Setting `websiteUrl` issues the site's signing secret once, on
+Reads, settings, keyword edits and `submitArticle` need `posts`; `suggestSeeds`, `planKeywords`,
+`requestArticle` and `regenerateArticle` spend AI credits and need `ai` (an empty balance is a
+`PaymentRequiredException`); `publishArticle` needs `publish`, answers 409 for a draft that was
+never submitted, and 409 `no_target` until a target is set. Setting `websiteUrl` issues the site's signing secret once, on
 `BlogSettingsUpdate.websiteSecret()`; `rotateWebsiteSecret` issues a new one.
 
 To verify a delivery, hand `WebhookVerifier` the raw request bytes, the headers and the secret.
