@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fopost.sdk.model.BlogArticle;
 import com.fopost.sdk.model.BlogArticleFull;
 import com.fopost.sdk.model.BlogArticleStatus;
+import com.fopost.sdk.model.BlogGoal;
 import com.fopost.sdk.model.BlogKeyword;
 import com.fopost.sdk.model.BlogKeywordStatus;
 import com.fopost.sdk.model.BlogSettings;
@@ -26,18 +27,21 @@ class BlogTest {
     private static final String SETTINGS =
             """
             {"siteUrl":"https://yourbrand.com","topic":"Scheduling","audience":"Marketers",
+             "goal":"leads","focusTopics":"Scheduling tips","avoidTopics":"Competitor brands",
              "language":"en","locationCode":2840,"cadencePerWeek":2,"reviewHoldDays":3,
-             "autoPublish":false,"imageTier":"standard","inBodyImages":2,"minWords":900,
+             "imageTier":"standard","inBodyImages":2,"minWords":900,
              "maxWords":1500,"brandVoiceId":null,"targetKind":"website","targetAccountId":null,
              "targetPlatform":null,"websiteUrl":"https://yourbrand.com/hooks/fopost",
              "hasWebsiteSecret":true,"keywordDataAvailable":true,
+             "planRun":{"status":"done","error":null,"added":12,"finishedAt":"2026-10-11T09:05:00.000Z"},
              "updatedAt":"2026-10-11T09:00:00.000Z"}""";
 
     private static final String KEYWORD =
             """
             {"id":"kw_1","keyword":"how to schedule posts","searchVolume":1200,"difficulty":34,
              "cpc":1.25,"intent":"informational","source":"provider","status":"planned",
-             "plannedFor":"2026-10-14","createdAt":"2026-10-11T09:00:00.000Z"}""";
+             "plannedFor":"2026-10-14","fitReason":"Readers who schedule posts need a tool",
+             "createdAt":"2026-10-11T09:00:00.000Z"}""";
 
     private static final String ARTICLE =
             """
@@ -63,6 +67,12 @@ class BlogTest {
         assertEquals(2, settings.cadencePerWeek());
         assertTrue(settings.hasWebsiteSecret());
         assertEquals(Instant.parse("2026-10-11T09:00:00Z"), settings.updatedAt());
+        assertEquals(BlogGoal.LEADS, settings.goal());
+        assertEquals("Scheduling tips", settings.focusTopics());
+        assertEquals("Competitor brands", settings.avoidTopics());
+        assertEquals("done", settings.planRun().status());
+        assertEquals(12, settings.planRun().added());
+        assertEquals(Instant.parse("2026-10-11T09:05:00Z"), settings.planRun().finishedAt());
 
         BlogSettingsUpdate updated = client.blog().updateSettings(
                 "w1",
@@ -70,12 +80,16 @@ class BlogTest {
                         .websiteUrl("https://yourbrand.com/hooks/fopost")
                         .targetKind(BlogTargetKind.WEBSITE)
                         .brandVoiceId(null)
-                        .cadencePerWeek(2));
+                        .cadencePerWeek(2)
+                        .goal(BlogGoal.LEADS)
+                        .focusTopics("Scheduling tips")
+                        .avoidTopics(null));
         assertEquals("PATCH", transport.last().method());
         assertEquals("https://api.fopost.test/v1/blog/settings", transport.last().url());
         assertEquals(
                 "{\"workspaceId\":\"w1\",\"websiteUrl\":\"https://yourbrand.com/hooks/fopost\","
-                        + "\"targetKind\":\"website\",\"brandVoiceId\":null,\"cadencePerWeek\":2}",
+                        + "\"targetKind\":\"website\",\"brandVoiceId\":null,\"cadencePerWeek\":2,"
+                        + "\"goal\":\"leads\",\"focusTopics\":\"Scheduling tips\",\"avoidTopics\":null}",
                 transport.lastBody());
         assertEquals("whsec_abc", updated.websiteSecret());
         assertEquals("en", updated.settings().language());
@@ -109,6 +123,7 @@ class BlogTest {
         assertEquals(1200, keywords.get(0).searchVolume());
         assertEquals(LocalDate.of(2026, 10, 14), keywords.get(0).plannedFor());
         assertEquals(1.25, keywords.get(0).cpc());
+        assertEquals("Readers who schedule posts need a tool", keywords.get(0).fitReason());
 
         client.blog().planKeywords("w1", List.of("scheduling", "analytics"));
         assertEquals("https://api.fopost.test/v1/blog/keywords/plan", transport.last().url());
@@ -201,5 +216,47 @@ class BlogTest {
         FoPostException noTarget = assertThrows(FoPostException.class, () -> client.blog().publishArticle("w1", "art_1"));
         assertEquals(409, noTarget.status());
         assertEquals("no_target", noTarget.code());
+    }
+
+    @Test
+    void suggestSeedsSendsTheCurrentSeedsAndPromptAndReturnsTheTerms() {
+        FakeTransport transport = new FakeTransport()
+                .enqueue(200, "{\"data\":{\"seeds\":[\"schedule posts\",\"best time to post\"]}}")
+                .enqueue(200, "{\"data\":{\"seeds\":[]}}")
+                .enqueue(402, "{\"error\":\"insufficient_credits\",\"message\":\"Balance\"}");
+        FoPost client = TestSupport.client(transport);
+
+        List<String> seeds = client.blog().suggestSeeds("w1", List.of("scheduling"), "Small teams");
+        assertEquals("POST", transport.last().method());
+        assertEquals("https://api.fopost.test/v1/blog/keywords/suggest", transport.last().url());
+        assertEquals(
+                "{\"workspaceId\":\"w1\",\"seeds\":[\"scheduling\"],\"prompt\":\"Small teams\"}",
+                transport.lastBody());
+        assertEquals(List.of("schedule posts", "best time to post"), seeds);
+
+        assertEquals(List.of(), client.blog().suggestSeeds("w1"));
+        assertEquals("{\"workspaceId\":\"w1\"}", transport.lastBody());
+
+        assertThrows(PaymentRequiredException.class, () -> client.blog().suggestSeeds("w1"));
+    }
+
+    @Test
+    void submitArticleMovesItToReviewByPath() {
+        String inReview = ARTICLE.replace("\"status\":\"queued\"", "\"status\":\"in_review\"");
+        FakeTransport transport = new FakeTransport()
+                .enqueue(200, "{\"data\":" + inReview + "}")
+                .enqueue(409, "{\"error\":\"invalid_state\",\"message\":\"Only a draft can be submitted\"}");
+        FoPost client = TestSupport.client(transport);
+
+        BlogArticle submitted = client.blog().submitArticle("w1", "art_1");
+        assertEquals("POST", transport.last().method());
+        assertEquals("https://api.fopost.test/v1/blog/articles/art_1/submit?workspaceId=w1", transport.last().url());
+        assertNull(transport.last().body());
+        assertEquals(BlogArticleStatus.IN_REVIEW, submitted.status());
+        assertTrue(BlogArticleStatus.ALL.contains(submitted.status()));
+
+        FoPostException conflict = assertThrows(FoPostException.class, () -> client.blog().submitArticle("w1", "art_1"));
+        assertEquals(409, conflict.status());
+        assertEquals("invalid_state", conflict.code());
     }
 }

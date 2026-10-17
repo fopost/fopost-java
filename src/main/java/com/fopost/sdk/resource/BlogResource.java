@@ -20,10 +20,11 @@ import java.util.Map;
  * Articles for a website: the keyword plan, the drafts the writer produces, and where they are
  * published. A post goes to a social network; an article goes to a website.
  *
- * <p>Reads, settings and keyword edits need the {@code posts} scope. {@code planKeywords},
- * {@code requestArticle} and {@code regenerateArticle} spend AI credits and need {@code ai}; an
- * empty balance answers 402. {@code publishArticle} needs {@code publish} and answers 409
- * {@code no_target} until the settings name a target. Every call names the workspace: on the query
+ * <p>Reads, settings, keyword edits and {@code submitArticle} need the {@code posts} scope.
+ * {@code suggestSeeds}, {@code planKeywords}, {@code requestArticle} and {@code regenerateArticle}
+ * spend AI credits and need {@code ai}; an empty balance answers 402. {@code publishArticle} needs
+ * {@code publish}, answers 409 for a draft that was never submitted, and 409 {@code no_target}
+ * until the settings name a target. Every call names the workspace: on the query
  * string for a read, an update or a delete, in the body for a create.
  *
  * <pre>{@code
@@ -31,6 +32,7 @@ import java.util.Map;
  *         workspace.id(), BlogParams.Article.create().keyword("how to schedule posts"));
  *
  * BlogArticleFull full = fopost.blog().getArticle(workspace.id(), article.id());
+ * fopost.blog().submitArticle(workspace.id(), article.id());
  * fopost.blog().publishArticle(workspace.id(), article.id());
  * }</pre>
  */
@@ -97,12 +99,42 @@ public final class BlogResource {
         return http.convertList(ApiClient.unwrap(http.get("/v1/blog/keywords", query)), BlogKeyword.class);
     }
 
-    /** Queue a planning run from the settings' topic and audience. Spends AI credits. */
+    /** About 10 search terms from the blog goal and topics. Spends AI credits. */
+    public List<String> suggestSeeds(String workspaceId) {
+        return suggestSeeds(workspaceId, List.of(), null);
+    }
+
+    /**
+     * About 10 search terms from the blog goal and topics, to edit before {@link #planKeywords}.
+     * Pass the current {@code seeds} (at most 20) to refine them and a {@code prompt} (up to 500
+     * characters, or null) to steer. Spends AI credits.
+     */
+    public List<String> suggestSeeds(String workspaceId, List<String> seeds, String prompt) {
+        Map<String, Object> body = workspace(workspaceId);
+        if (!seeds.isEmpty()) {
+            body.put("seeds", seeds);
+        }
+        if (prompt != null) {
+            body.put("prompt", prompt);
+        }
+        JsonNode data = ApiClient.unwrap(http.post("/v1/blog/keywords/suggest", body));
+        return http.convertList(data.path("seeds"), String.class);
+    }
+
+    /**
+     * Queue a research run with terms derived from the blog settings. Results land as
+     * {@code suggested} keywords; follow the run in {@link BlogSettings#planRun()}. Spends AI
+     * credits.
+     */
     public void planKeywords(String workspaceId) {
         planKeywords(workspaceId, List.of());
     }
 
-    /** Queue a planning run around these seed terms. Spends AI credits. */
+    /**
+     * Queue a research run around these seed terms. Results land as {@code suggested} keywords and
+     * never fill the calendar; set one to {@code planned} with {@link #updateKeyword} to pick it.
+     * Spends AI credits.
+     */
     public void planKeywords(String workspaceId, List<String> seeds) {
         Map<String, Object> body = workspace(workspaceId);
         if (!seeds.isEmpty()) {
@@ -156,7 +188,10 @@ public final class BlogResource {
                 BlogArticleFull.class);
     }
 
-    /** Edit a draft. An article that is not editable answers 409 {@code invalid_state}. */
+    /**
+     * Edit an article. One that is not editable answers 409 {@code invalid_state}, as does a
+     * {@code publishAt} on a draft that was never submitted with {@link #submitArticle}.
+     */
     public BlogArticleFull updateArticle(String workspaceId, String articleId, BlogParams.ArticleUpdate params) {
         return http.convert(
                 ApiClient.unwrap(http.request(
@@ -170,14 +205,20 @@ public final class BlogResource {
     }
 
     /**
-     * Publish a draft to the configured target. Needs {@code publish}; answers 409
-     * {@code no_target} when the settings name none.
+     * Publish an article in review to the configured target. Needs {@code publish}. A draft answers
+     * 409 until it is submitted with {@link #submitArticle}; 409 {@code no_target} means the
+     * settings name none.
      */
     public BlogArticle publishArticle(String workspaceId, String articleId) {
         return action(workspaceId, articleId, "publish");
     }
 
-    /** Take a draft out of review without publishing it. */
+    /** Move a draft, failed or rejected article to {@code in_review}. Any other state answers 409. */
+    public BlogArticle submitArticle(String workspaceId, String articleId) {
+        return action(workspaceId, articleId, "submit");
+    }
+
+    /** Take an article out of review without publishing it. */
     public BlogArticle rejectArticle(String workspaceId, String articleId) {
         return action(workspaceId, articleId, "reject");
     }
