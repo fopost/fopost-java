@@ -4,13 +4,16 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * A comment, mention or direct message on a connected account.
+ * A comment, mention, review or direct message on a connected account.
  *
- * <p>{@code type} is comment, mention or dm; {@code state} is unread, read, resolved or snoozed.
+ * <p>{@code type} is comment, mention, review or dm; {@code state} is unread, read, resolved or
+ * snoozed. {@code rating} is the stars on a review, 1-5, and null on every other type.
  * The {@code can*} flags say which actions the platform allows on it. {@code canDelete} covers a
  * comment someone left or our own reply; {@code canPin} and {@code canEdit} are our own comments
  * only; {@code canPrivateReply} means a DM can be opened from it with
  * {@code StartConversationParams.privateReply}. {@code reaction} is our reaction on a DM.
+ * {@code moderationStatus} is the platform's own state for a comment: published, held, spam or
+ * rejected, and null where the platform does not report one.
  */
 public record InboxItem(
         String id,
@@ -24,6 +27,7 @@ public record InboxItem(
         String authorHandle,
         String authorAvatarUrl,
         String text,
+        Integer rating,
         List<InboxAttachment> attachments,
         String permalink,
         String postExternalId,
@@ -47,6 +51,7 @@ public record InboxItem(
         Boolean canSendMedia,
         Boolean canQuickReply,
         Boolean canPrivateReply,
+        String moderationStatus,
         PostRef post,
         InboxPostContext postContext,
         InboxAccountRef account) {}

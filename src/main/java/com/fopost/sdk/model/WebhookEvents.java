@@ -14,8 +14,9 @@ public final class WebhookEvents {
     public static final String DELIVERY_FAILED = "delivery.failed";
     public static final String DELIVERY_DELAYED = "delivery.delayed";
     public static final String ACCOUNT_HEALTH_CHANGED = "account.health_changed";
+    public static final String ARTICLE_PUBLISHED = "article.published";
 
     public static final List<String> ALL = List.of(
             POST_PUBLISHED, POST_FAILED, POST_PARTIALLY_FAILED, DELIVERY_PUBLISHED,
-            DELIVERY_FAILED, DELIVERY_DELAYED, ACCOUNT_HEALTH_CHANGED);
+            DELIVERY_FAILED, DELIVERY_DELAYED, ACCOUNT_HEALTH_CHANGED, ARTICLE_PUBLISHED);
 }

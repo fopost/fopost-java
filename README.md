@@ -99,18 +99,29 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `posts()`       | `list`, `autoPaginate`, `stream`, `get`, `create`, `update`, `delete`, `duplicate`, `publish`, `retry`, `cancel`, `preflight`, `deliveries`, `publishRuns`, `analytics`, `bulkShift`, `bulkLabel`, `bulkDelete`, `validateImport`, `commitImport`, `rollbackImport` |
 | `workspaces()`  | `list`, `get`, `create`, `update`, `delete`, `analytics`                                                                                                                                     |
-| `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `communities()`                                                       |
+| `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `getIceBreakers`, `setIceBreakers`, `deleteIceBreakers`, `getPersistentMenu`, `setPersistentMenu`, `deletePersistentMenu`, `getGreeting`, `setGreeting`, `deleteGreeting`, `getWebhookSubscription`, `resubscribeWebhook`, `communities()`, `listDiscordChannels`, `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`, `listDiscordPins`, `deleteDiscordMessage`, `pinDiscordMessage`, `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`, `sendDiscordDm`, `listDiscordEvents`, `getDiscordEvent`, `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`, `listDiscordMembers`, `getDiscordMember`, `listDiscordRoles`, `createDiscordRole`, `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole`, `removeDiscordMemberRole`, `platformMetrics` |
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
-| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`                                                                                                                                                 |
-| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`                                                                                     |
+| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `verify`                                                                                                                                       |
+| `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
+| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
-| `media()`       | `list`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                            |
+| `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
+| `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `passThreadControl`, `takeThreadControl`, `handover`, `listApprovals`, `approveReply`, `rejectReply` |
+| `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
+| `broadcasts()`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
+| `sequences()`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
+| `knowledge()`   | `list`, `create`, `createText`, `createUrl`, `createFile`, `update`, `delete`, `sync`, `search`                                                                                                |
+| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `whatsapp()`    | `getProfile`, `updateProfile`, `requestDisplayName`, `setUsername`, `listTemplates`, `listTemplateLibrary`, `getTemplate`, `createTemplate`, `importTemplate`, `updateTemplate`, `deleteTemplate`, `listGroups`, `createGroup`, `getGroup`, `updateGroup`, `deleteGroup`, `getGroupInviteLink`, `resetGroupInviteLink`, `removeGroupParticipants`, `listBlocked`, `blockUsers`, `unblockUsers`, `getCommerceSettings`, `updateCommerceSettings`, `linkCatalog`, `listFlows`, `getFlow`, `createFlow`, `updateFlow`, `deleteFlow`, `uploadFlowJson`, `publishFlow`, `deprecateFlow`, `listFlowResponses`, `getEncryptionKeyStatus`, `setEncryptionKey`, `getAccountEvents`, `listSandboxSessions`, `createSandboxSession` |
+| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `providers`, `authorize`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `addAudienceCompanies`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `bidPricing`, `supplyForecast`, `conversionRules`, `createConversionRule`, `conversionRule`, `updateConversionRule`, `deleteConversionRule`, `attachConversionRule`, `detachConversionRule`, `conversionMetrics`, `sendConversionEvents` |
+| `googleAds()`  | `recommendations`, `optimizationScore`, `applyRecommendations`, `dismissRecommendations`, `keywords`, `createKeyword`, `updateKeyword`, `deleteKeyword`, `keywordIdeas`, `keywordMetrics`, `searchTerms`, `bidStrategies`, `createBidStrategy`, `adSchedule`, `setAdSchedule`, `negativeKeywordLists`, `createNegativeKeywordList`, `addNegativeKeywords`, `attachNegativeKeywordList`, `assets`, `createAsset`, `attachAsset`, `deleteAsset`, `assetGroups`, `createAssetGroup`, `updateAssetGroup`, `deleteAssetGroup`, `localServicesLeads`, `conversionActions`, `createConversionAction`, `uploadConversions`, `uploadConversionAdjustments`, `query` |
+| `googleBusiness()` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `validate()`    | `post`, `length`, `media`                                                                                                                                                                   |
+| `activity()`    | `list`                                                                                                                                                                                      |
 
 `accounts().communities()` covers the X communities an account can post into: `list`, `sync`,
 `search`, `add`, `remove`.
@@ -120,6 +131,41 @@ the decoded body:
 
 ```java
 JsonNode body = client.request("GET", "/v1/analytics/overview", null, Map.of("days", 30));
+```
+
+## Broadcasts and sequences
+
+A broadcast is one message into every conversation you already have with a segment of your contacts; a sequence is a series of them on a delay. Neither opens a cold DM.
+
+Nothing is sent into a closed messaging window: Messenger and Instagram take a business-initiated message only within 24 hours of the contact's last one, so recipients outside it come back skipped with `window_closed` rather than attempted. Telegram, Slack, Bluesky and Reddit have no window. The number sent is therefore often lower than the audience, and that is correct rather than a failure.
+
+Reading needs the `inbox` scope; `send`, `cancel`, `enroll` and `unenroll` also need `publish`.
+
+```java
+Broadcast broadcast = client.broadcasts().create(
+        BroadcastParams.Create.of(workspaceId, accountId, "September check-in",
+                        "New colours just landed. Want a look?")
+                .audience(AudienceFilter.all().platforms("instagram")));
+
+// recipients() on the result is how many contacts matched, not how many will be messaged.
+BroadcastSent sent = client.broadcasts().send(broadcast.id());
+
+// Who was skipped, and why.
+for (BroadcastRecipient r : client.broadcasts()
+        .recipients(broadcast.id(), BroadcastParams.Recipients.create().status("skipped"))) {
+    System.out.println(r.displayName() + ": " + r.skipReason());
+}
+
+Sequence sequence = client.sequences().create(
+        BroadcastParams.CreateSequence.of(workspaceId, accountId, "Welcome", List.of(
+                SequenceStep.of(0, "Thanks for the follow — anything I can help with?"),
+                SequenceStep.of(48, "Here is what people usually ask us first."))));
+
+// By id, or by the same audience filter a broadcast takes.
+client.sequences().enroll(sequence.id(), BroadcastParams.Enroll.contacts(List.of(contactId)));
+
+// Nothing further fires for them.
+client.sequences().unenroll(sequence.id(), List.of(contactId));
 ```
 
 ## Media
@@ -135,17 +181,69 @@ client.posts().create(CreatePostParams.of(workspace.id())
 ```
 
 A direct upload sends the bytes to storage instead of through the API. `uploadDirect` does the
-three steps in one call; `presign` and `complete` are the steps themselves, for a client that
+three steps in one call and streams the file from a `Path` or an `InputStream`, so a multi-gigabyte
+upload never sits in memory; `presign` and `complete` are the steps themselves, for a client that
 sends the bytes some other way:
 
 ```java
-UploadedMedia file = client.media().uploadDirect(workspace.id(), "chart.png", "image/png", bytes);
+UploadedMedia file = client.media().uploadDirect(workspace.id(), FileInput.of(Path.of("launch.mp4")));
 
 PresignedUpload reserved = client.media().presign(
-        PresignUploadParams.of(workspace.id(), "chart.png", "image/png", bytes.length));
+        PresignUploadParams.of(workspace.id(), "chart.png", "image/png", bytes.length)
+                .folderId(folderId)
+                .brandRole("logo"));
 // PUT bytes to reserved.uploadUrl() with reserved.headers(), then:
 UploadedMedia same = client.media().complete(reserved.uploadId());
 ```
+
+`PresignUploadParams` also takes `origin("chat")`, `brandVoiceId`, and `personConsent(subject,
+statement)`, which a `brandRole` of `person` requires.
+
+### Upload limits
+
+How large a file may be depends on the account: 100 MB with up to 2 connected accounts, 400 MB up
+to 7, 2 GB up to 15, 5 GB beyond that or with the Large Uploads add-on. `limits` reports the
+ceilings; `multipartMaxFileBytes` (100 MB) is the most `upload` or a post request carries per file,
+and anything larger has to go through `uploadDirect`:
+
+```java
+UploadLimits limits = client.media().limits(workspace.id());
+limits.maxFileBytes();           // the largest file by any route
+limits.multipartMaxFileBytes();  // the per-file ceiling of a multipart request
+limits.nextTier();               // what more connected accounts would unlock, or null
+```
+
+A file past the ceiling answers `413` with code `file_too_large`. It arrives as a `FoPostException`
+whose `status()` is `413` and whose `body()` carries `max_file_bytes`, `file_bytes` and `upgrade_url`:
+
+```java
+try {
+    client.media().upload(workspace.id(), Path.of("huge.mov"));
+} catch (FoPostException e) {
+    if (e.status() == 413) {
+        long max = ((JsonNode) e.body()).path("max_file_bytes").asLong();
+    }
+}
+```
+
+### Files on posts
+
+`posts().create` and `posts().update` take a list of files and attach them to the first content
+block, so there is no separate upload step:
+
+```java
+Post post = client.posts().create(
+        CreatePostParams.of(workspace.id()).accounts(accountId).content("Launch day"),
+        List.of(FileInput.of(Path.of("launch.mp4")), FileInput.of("chart.png", "image/png", bytes)));
+
+client.posts().update(post.id(), UpdatePostParams.create(), List.of(FileInput.of(Path.of("more.png"))));
+```
+
+The SDK picks the route. When every file fits the multipart ceiling it sends one
+`multipart/form-data` request to the post endpoint, with the JSON body in a `post` field and the
+files under `files` (at most five). Otherwise it uploads each file directly, then sends the usual
+JSON request with the results attached as media items. An update without new content reads the
+post first and appends to what its first block already holds.
 
 ## Webhooks
 
@@ -160,6 +258,50 @@ Webhook hook = client.webhooks().create(
 System.out.println(hook.secret());
 client.webhooks().test(hook.id());
 ```
+
+## Blog
+
+A post goes to a social network; an article goes to a website. `blog()` holds the keyword plan,
+the articles the writer produces, and the settings that say where they are published:
+`BlogTargetKind.PRODUCT_BLOG`, a connected `ACCOUNT`, or your own `WEBSITE`, which receives each
+published article as a signed webhook.
+
+```java
+BlogArticle article = client.blog().requestArticle(
+        workspace.id(),
+        BlogParams.Article.create()
+                .keyword("how to schedule posts")
+                .instructions("Lead with the calendar view."));
+
+// Poll until the status leaves queued and writing, then read the body.
+BlogArticleFull draft = client.blog().getArticle(workspace.id(), article.id());
+client.blog().publishArticle(workspace.id(), article.id());
+```
+
+Reads, settings and keyword edits need `posts`; `planKeywords`, `requestArticle` and
+`regenerateArticle` spend AI credits and need `ai` (an empty balance is a
+`PaymentRequiredException`); `publishArticle` needs `publish` and answers 409 `no_target` until
+a target is set. Setting `websiteUrl` issues the site's signing secret once, on
+`BlogSettingsUpdate.websiteSecret()`; `rotateWebsiteSecret` issues a new one.
+
+To verify a delivery, hand `WebhookVerifier` the raw request bytes, the headers and the secret.
+It prefers the timestamped signature, refuses one more than 300 seconds old, and falls back to
+the body-only signature when no timestamp header is present. The same call is on
+`client.webhooks().verify(...)`.
+
+```java
+byte[] rawBody = request.getInputStream().readAllBytes();
+WebhookEnvelope envelope = WebhookVerifier.verify(rawBody, headers, System.getenv("FOPOST_WEBHOOK_SECRET"));
+
+if (WebhookEvents.ARTICLE_PUBLISHED.equals(envelope.event())) {
+    BlogArticlePublished published = envelope.data(BlogArticlePublished.class);
+    store(published.slug(), published.bodyHtml());
+}
+```
+
+A failed check is a `FoPostException` with code `missing_signature`, `invalid_signature`,
+`stale_timestamp` or `invalid_payload`. Image URLs in the payload are fetchable for six hours;
+download and store your own copy.
 
 ## AI features
 
@@ -201,9 +343,48 @@ drafted that a person still has to send; `approveReply` sends the draft (or your
 `rejectReply` discards it.
 
 The actions that act on the platform as the account also need the `publish` scope: `like`,
-`unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, a `reply` with
+`unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`, `setTyping`, `handover`, a `reply` with
 `InboxReplyParams` carrying `mediaIds` or `quickReplies`, and deleting our own reply. Each works only
 where the item's matching `can*` flag is true.
+
+## Contacts
+
+The people behind the inbox: one person however many handles they write from. An inbound item files its author, a reply files whoever you answered, and both fold into whatever is already on file. Needs the `inbox` scope.
+
+```java
+ContactPage page = client.contacts().list(
+        ContactParams.Filter.create().workspace(workspaceId).search("ada"));
+for (Contact contact : page) {
+    System.out.println(contact.displayName() + " — " + contact.channels().size() + " handles");
+}
+
+// Folds into whoever already holds the first channel, so this cannot duplicate someone.
+Contact contact = client.contacts().create(
+        ContactParams.Create.of(workspaceId, List.of(ContactChannel.of("x", "ada_writes")))
+                .displayName("Ada Okafor")
+                .fields(Map.of("plan_tier", "Pro")));
+
+client.contacts().update(contact.id(), ContactParams.Update.create().clearField("region"));
+client.contacts().delete(contact.id());   // the messages stay in the inbox
+
+// The threads this person appears in, newest first.
+for (ContactConversation thread : client.contacts().conversations(contact.id())) {
+    System.out.println(thread.platform() + " " + thread.messages() + " messages");
+}
+
+// platform and handle are required columns; any other column is a custom field key.
+ContactImportResult result = client.contacts().importCsv(workspaceId, "platform,handle\nx,ada_writes");
+System.out.println(result.created() + " created, " + result.merged() + " merged");
+
+// The columns your workspace keeps.
+ContactField field = client.contacts()
+        .createField(workspaceId, "plan_tier", "Plan Tier", "select", List.of("Free", "Pro"));
+client.contacts().deleteField(field.id());   // removes every answer to it
+
+// Volume and median reply time per thread. Needs the `analytics` scope.
+ConversationAnalytics report = client.contacts()
+        .conversationAnalytics(ContactParams.Conversations.create().days(30).sort("slowest"));
+```
 
 ## Ads
 
@@ -243,6 +424,44 @@ Creating, updating, deleting and duplicating campaigns, ad sets and network ads,
 `bulkSetStatus`, need the `publish` scope as well as `ads`. `leadsFeed` pages with a cursor: pass
 `nextCursor` back through `LeadsFeedParams.cursor(...)` until it is null.
 
+### Google Ads
+
+Campaigns, ad groups, ads, audiences, insights, labels, change history, experiments and
+conversion value rules are all on `ads()` and dispatch by connection, so they work on Google
+through the same calls as any other network. What only Google has is on `googleAds()`:
+
+```java
+var scope = GoogleAdsScope.of(connectionId, "1234567890");
+
+for (var recommendation : client.googleAds().recommendations(scope, List.of("KEYWORD"))) {
+    System.out.println(recommendation.type() + " -> " + recommendation.impact().potentialClicks());
+}
+
+client.googleAds().applyRecommendations(
+        GoogleAdsScope.of(connectionId, "1234567890").workspace(workspace.id()),
+        List.of("customers/1234567890/recommendations/ABC~1"));
+
+var ideas = client.googleAds().keywordIdeas(
+        new GoogleKeywordIdeasParams(scope).seeds(List.of("running shoes")));
+```
+
+Also here: `optimizationScore`, `keywords`, `createKeyword`, `updateKeyword`, `deleteKeyword`,
+`keywordMetrics`, `searchTerms`, `bidStrategies`, `createBidStrategy`, `adSchedule`,
+`setAdSchedule`, `negativeKeywordLists`, `createNegativeKeywordList`, `addNegativeKeywords`,
+`attachNegativeKeywordList`, `assets`, `createAsset`, `attachAsset`, `deleteAsset`,
+`assetGroups`, `createAssetGroup`, `updateAssetGroup`, `deleteAssetGroup`,
+`localServicesLeads`, `conversionActions`, `createConversionAction`, `uploadConversions`,
+`uploadConversionAdjustments`, and `query` for a raw read-only GAQL SELECT.
+
+An object id is `<customerId>~<kind>~<id>` — a Google resource name has slashes and cannot ride
+in a URL path segment, so every id carries the account it belongs to. The customer has to be an
+account the connection's grant reaches; any other answers 404. Amounts are in the account's
+currency, in minor units.
+
+Applying a recommendation changes what the live account serves or bids straight away, so it
+needs `publish` as well as `ads`; dismissing one only hides it. A connection on another network
+answers 400 on every call here.
+
 ## Validation
 
 Check a draft, a text, or a media url against the platform rules before creating anything:
@@ -260,6 +479,53 @@ MediaValidation file = client.validate().media("https://cdn.example.test/chart.p
 
 Nothing is stored. `media` answers `200` with `ok` false when the file fails a check; an
 unreachable url throws `ValidationException`. All three need the `posts` scope.
+
+## Analytics
+
+```java
+// How long a post keeps earning, from the repeated readings of each post
+var decay = client.analytics().decay(AnalyticsParams.create().days(30));
+System.out.println(decay.halfLifeBucket()); // e.g. "1h_3h"
+
+// Whether posting more earned more
+var cadence = client.analytics().frequency(AnalyticsParams.create().days(90));
+if (cadence.best() != null) {
+    System.out.println(cadence.best().label()); // e.g. "3-5 a week"
+}
+
+// Every reading held for one post, with what moved between them
+var timeline = client.analytics().timeline(post.id());
+
+// Mirror the metrics into your own store, without refetching everything
+Instant cursor = null;
+while (true) {
+    var params = AnalyticsParams.create();
+    if (cursor != null) {
+        params.since(cursor);
+    }
+    var page = client.analytics().changes(params);
+    save(page.changes());
+    if (!Boolean.TRUE.equals(page.hasMore()) || page.cursor() == null) {
+        break;
+    }
+    cursor = page.cursor();
+}
+
+// Refresh one post now instead of waiting for the next collection run
+client.analytics().collectPost(post.id());
+
+// Posts on the account that never went out through FoPost
+for (var native : client.analytics().nativePosts(accounts.get(0).id())) {
+    System.out.println(native.permalink() + " " + native.metrics().engagements());
+}
+```
+
+A post is addressed by its FoPost id or by its permalink, so a post made by
+hand on the network works the same way:
+
+```java
+client.analytics().timeline("https://x.com/acme/status/1");
+```
 
 ## Configuration
 
@@ -323,6 +589,22 @@ update, delete and duplicate on campaigns, ad sets and network ads, plus `bulkSe
 ## Example
 
 [`examples/CreatePost.java`](examples/CreatePost.java) creates a post against a running API.
+
+## Chatbots and the inbox
+
+The [chat adapter](https://fopost.com/docs/sdks/chat-adapter) turns the FoPost inbox into one send/receive channel for a chatbot
+framework. It ships in the TypeScript and Python SDKs. There is no dedicated adapter here and no
+API change behind it, so the same loop is three pieces with this client:
+
+1. **Verify** the `inbox.message_received` webhook. The payload is ids only, on purpose, so
+   nothing a customer wrote sits in your logs. The [signing scheme](https://fopost.com/docs/webhooks/verification)
+   is HMAC-SHA256 over `{timestamp}.{body}`, refused past a five minute tolerance.
+2. **Read** the item back with `client.inbox().list(InboxListParams.create()…)`, filtered to the payload's
+   `accountId` and matched on its `itemId`.
+3. **Answer** with `client.inbox().reply(item.id(), text)`, or open a thread with
+   `client.inbox().startConversation(…)`.
+
+Reading needs the `inbox` scope; answering needs `publish` as well.
 
 ## Contributing
 

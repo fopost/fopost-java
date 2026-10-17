@@ -26,14 +26,10 @@ public final class JdkTransport implements Transport {
 
     @Override
     public HttpResponseData send(HttpRequestData request) throws IOException, InterruptedException {
-        HttpRequest.BodyPublisher publisher = request.body() == null
-                ? HttpRequest.BodyPublishers.noBody()
-                : HttpRequest.BodyPublishers.ofByteArray(request.body());
-
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(request.url()))
                 .timeout(timeout)
-                .method(request.method(), publisher);
+                .method(request.method(), publisher(request));
         request.headers().forEach(builder::header);
 
         HttpResponse<byte[]> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
@@ -45,5 +41,17 @@ public final class JdkTransport implements Transport {
             }
         });
         return new HttpResponseData(response.statusCode(), headers, response.body());
+    }
+
+    private static HttpRequest.BodyPublisher publisher(HttpRequestData request) {
+        if (request.body() != null) {
+            return HttpRequest.BodyPublishers.ofByteArray(request.body());
+        }
+        if (request.bodyStream() != null) {
+            // Fixed length so the request carries Content-Length, which a presigned PUT requires.
+            return HttpRequest.BodyPublishers.fromPublisher(
+                    HttpRequest.BodyPublishers.ofInputStream(request.bodyStream()), request.bodyLength());
+        }
+        return HttpRequest.BodyPublishers.noBody();
     }
 }
