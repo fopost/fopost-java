@@ -96,6 +96,10 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- `blog()` matches the live API contract: the workspace travels as `workspace_id` on the query
+  string, single objects are read bare and lists from `{data}`, and responses are read in
+  snake_case. `BlogWebsiteTest.status` is now `httpStatus`, read from the API's `http_status`;
+  a failed test still comes back with `ok` false rather than as an exception.
 - `blog().planKeywords` no longer fills the calendar: results land as `suggested` keywords, and
   setting one to `planned` with `updateKeyword` picks it and gives it the next free date.
 - `blog().publishArticle` and `publishAt` on `updateArticle` need an article in review (or
