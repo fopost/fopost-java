@@ -79,7 +79,6 @@ public final class AnalyticsResource {
                 ApiClient.unwrap(http.get("/v1/analytics/demographics", params.toQuery())), Demographics.class);
     }
 
-    /** Fetch fresh figures from the platforms now, rather than waiting for the next scheduled pass. */
     /**
      * How the inbox performed: volume received and sent, reply coverage, median first-reply time,
      * per-platform and per-account rows, response-time buckets and a weekday-by-hour heatmap.
@@ -102,6 +101,7 @@ public final class AnalyticsResource {
         return inbox(params, null);
     }
 
+    /** Fetch fresh figures from the platforms now, rather than waiting for the next scheduled pass. */
     public CollectSummary collect() {
         return collect(null);
     }
