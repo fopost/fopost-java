@@ -113,7 +113,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `broadcasts()`  | `list`, `get`, `create`, `update`, `delete`, `send`, `cancel`, `recipients` |
 | `sequences()`   | `list`, `get`, `create`, `update`, `delete`, `enroll`, `unenroll`, `enrollments` |
 | `knowledge()`   | `list`, `create`, `createText`, `createUrl`, `createFile`, `update`, `delete`, `sync`, `search`                                                                                                |
-| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet` |
+| `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage`, `goals`, `catalogs`, `createCatalog`, `catalog`, `updateCatalog`, `deleteCatalog`, `catalogProducts`, `writeCatalogProducts`, `productFeeds`, `createProductFeed`, `deleteProductFeed`, `feedUploads`, `startFeedUpload`, `productSets`, `createProductSet`, `updateProductSet`, `deleteProductSet`, `reachFrequency`, `createReachFrequency`, `reachFrequencyPrediction`, `reserveReachFrequency`, `cancelReachFrequency`, `library`, `partnershipCreators`, `requestPartnership`, `revokePartnership`, `accountActivity`, `labels`, `createLabel`, `updateLabel`, `deleteLabel`, `applyLabel`, `studies`, `createStudy`, `study`, `deleteStudy`, `iosCampaignLimits`, `highDemandPeriods`, `createHighDemandPeriod`, `deleteHighDemandPeriod`, `valueRuleSets`, `createValueRuleSet`, `deleteValueRuleSet`, `uploadConversions`, `sendPixelConversions`, `listConversionBatches`, `pixels`, `createPixel`, `pixel`, `updatePixel`, `sharePixel`, `pixelStats`, `eventMatchQuality`, `customConversions`, `createCustomConversion`, `customConversion`, `updateCustomConversion`, `deleteCustomConversion` |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `vote`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `listApprovals`, `approveReply`, `rejectReply` |
 | `ads()`         | `list`, `external`, `boostable`, `connections`, `sources`, `authorizeMeta`, `deleteConnection`, `boost`, `create`, `refresh`, `setStatus`, `delete`, `accountTree`, `createCampaign`, `campaign`, `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, `createAdSet`, `adSet`, `updateAdSet`, `deleteAdSet`, `duplicateAdSet`, `createNetworkAd`, `networkAd`, `updateNetworkAd`, `deleteNetworkAd`, `duplicateNetworkAd`, `bulkSetStatus`, `creatives`, `createCreative`, `creative`, `deleteCreative`, `estimateReach`, `insights`, `adInsights`, `audiences`, `createAudience`, `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`, `searchTargeting`, `leadForms`, `createLeadForm`, `leadForm`, `archiveLeadForm`, `leads`, `leadsFeed`, `leadPages`, `subscribeLeadPage`, `unsubscribeLeadPage` |
 | `whatsapp()`    | `getProfile`, `updateProfile`, `requestDisplayName`, `setUsername`, `listTemplates`, `listTemplateLibrary`, `getTemplate`, `createTemplate`, `importTemplate`, `updateTemplate`, `deleteTemplate`, `listGroups`, `createGroup`, `getGroup`, `updateGroup`, `deleteGroup`, `getGroupInviteLink`, `resetGroupInviteLink`, `removeGroupParticipants`, `listBlocked`, `blockUsers`, `unblockUsers`, `getCommerceSettings`, `updateCommerceSettings`, `linkCatalog`, `listFlows`, `getFlow`, `createFlow`, `updateFlow`, `deleteFlow`, `uploadFlowJson`, `publishFlow`, `deprecateFlow`, `listFlowResponses`, `getEncryptionKeyStatus`, `setEncryptionKey`, `getAccountEvents`, `listSandboxSessions`, `createSandboxSession` |
@@ -449,6 +449,31 @@ client.ads().bulkSetStatus(BulkAdStatusParams.of(workspace.id(), connectionId, "
 Creating, updating, deleting and duplicating campaigns, ad sets and network ads, and
 `bulkSetStatus`, need the `publish` scope as well as `ads`. `leadsFeed` pages with a cursor: pass
 `nextCursor` back through `LeadsFeedParams.cursor(...)` until it is null.
+
+### Tracking
+
+Pixels, the Conversions API and custom conversions, all on the `ads` scope. `sendPixelConversions`
+needs an `Idempotency-Key`: the same key within the retention window answers the stored batch with
+`replayed()` true and sends nothing. `uploadConversions` takes the key as an optional second argument.
+
+```java
+AdPixel pixel = client.ads().pixels(workspace.id(), connectionId, "act_123").get(0);
+
+ConversionUploadResult sent = client.ads().sendPixelConversions(
+        UploadConversionsParams.of(workspace.id(), connectionId, "act_123", pixel.id())
+                .event("Purchase", "2026-10-18T10:04:00Z")
+                .with("eventId", order.id())
+                .with("email", order.email())
+                .with("valueMinor", 4999)
+                .with("currency", "USD"),
+        order.id());
+
+CustomConversion signup = client.ads().createCustomConversion(
+        CreateCustomConversionParams.of(workspace.id(), connectionId, "act_123", pixel.id(), "Signup", "LEAD")
+                .urlContains("/thanks"));
+
+List<EventMatchQuality> quality = client.ads().eventMatchQuality(pixel.id(), workspace.id(), connectionId, "act_123");
+```
 
 ### Google Ads
 
