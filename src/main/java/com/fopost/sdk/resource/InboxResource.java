@@ -40,8 +40,8 @@ import java.util.Map;
  * }</pre>
  *
  * <p>Every call needs the {@code inbox} scope on an API key. The calls that act on the platform as
- * the account (like, pin, react, edit, start a conversation, typing, a reply with media or quick
- * replies, deleting our own reply) also need the {@code publish} scope.
+ * the account (like, repost, bookmark, pin, react, edit, start a conversation, typing, a reply
+ * with media or quick replies, deleting our own reply) also need the {@code publish} scope.
  */
 public final class InboxResource {
 
@@ -213,6 +213,31 @@ public final class InboxResource {
 
     public InboxItem unlike(String itemId) {
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unlike", null)), InboxItem.class);
+    }
+
+    /**
+     * Repost to the account's own timeline (X). Only where {@code canRepost} is true. An X account
+     * connected before the repost grant answers 409 {@code reconnect_required} until it is
+     * reconnected; a spent X balance answers 402 {@code platform_balance_spent}.
+     */
+    public InboxItem repost(String itemId) {
+        return http.convert(ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/repost", null)), InboxItem.class);
+    }
+
+    public InboxItem unrepost(String itemId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unrepost", null)), InboxItem.class);
+    }
+
+    /** Bookmark on the account (X). Only where {@code canBookmark} is true; same errors as repost. */
+    public InboxItem bookmark(String itemId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/bookmark", null)), InboxItem.class);
+    }
+
+    public InboxItem unbookmark(String itemId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/inbox/" + itemId + "/unbookmark", null)), InboxItem.class);
     }
 
     /** Pin our own comment. Only where {@code canPin} is true. */

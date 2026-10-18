@@ -11,7 +11,8 @@ import java.util.List;
  * The {@code can*} flags say which actions the platform allows on it. {@code canDelete} covers a
  * comment someone left or our own reply; {@code canPin} and {@code canEdit} are our own comments
  * only; {@code canPrivateReply} means a DM can be opened from it with
- * {@code StartConversationParams.privateReply}. {@code reaction} is our reaction on a DM.
+ * {@code StartConversationParams.privateReply}. {@code reaction} is our reaction on a DM. {@code reposted} and
+ * {@code bookmarked}, with {@code canRepost} and {@code canBookmark}, are X only.
  * {@code moderationStatus} is the platform's own state for a comment: published, held, spam or
  * rejected, and null where the platform does not report one.
  */
@@ -41,11 +42,15 @@ public record InboxItem(
         Boolean canHide,
         Boolean canDelete,
         Boolean liked,
+        Boolean reposted,
+        Boolean bookmarked,
         String vote,
         Boolean pinned,
         String reaction,
         Instant editedAt,
         Boolean canLike,
+        Boolean canRepost,
+        Boolean canBookmark,
         Boolean canVote,
         Boolean canPin,
         Boolean canEdit,
