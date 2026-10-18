@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2026-10-18
 
 ### Added
 
@@ -94,6 +94,35 @@ All notable changes to this project are documented here. The format follows
   `updateSlackIdentity` (`UpdateSlackIdentityParams`) for a Slack account. A webhook-connected
   account answers 409 `webhook_connection`.
 
+- `ads()`: the campaign tree and its objects, read live from Meta: `accountTree`, and
+  create/get/update/delete/duplicate for campaigns, ad sets and network ads, plus `bulkSetStatus`.
+  The writes need the `publish` scope as well as `ads`.
+- `ads()`: `creatives`, `createCreative` (image, video or carousel), `creative`, `deleteCreative`;
+  `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`; `estimateReach`; `insights`
+  and `adInsights` with an optional breakdown and daily timeline.
+- `ads()`: `leadForm`, `archiveLeadForm`, the cursor-paged `leadsFeed`, and `leadPages`,
+  `subscribeLeadPage`, `unsubscribeLeadPage`.
+- `CreateAdParams.urlTags` and `Ad.Creative.urlTags`.
+
+- `inbox()`: `like`, `unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`
+  (`StartConversationParams`), `setTyping`, and `reply` with `InboxReplyParams` for media and quick
+  replies. All of them also need the `publish` scope, as does deleting our own reply.
+- `InboxItem` gains `liked`, `pinned`, `reaction`, `editedAt` and the `canLike`, `canPin`,
+  `canEdit`, `canReact`, `canSendMedia`, `canQuickReply` and `canPrivateReply` flags;
+  `InboxAccount` gains `canStartConversation`.
+- `validate` resource (`client.validate()`): `post`, `length` and `media` check a draft, a text
+  length, or a media url against the platform rules without creating a post. Needs the `posts`
+  scope.
+- `accounts()`: `redditSubreddits`, `redditSubredditRules`, `redditFlairs` and
+  `setRedditDefaultSubreddit` for a Reddit account, plus `validate().subreddit` to check a
+  subreddit before publishing and `inbox().vote(itemId, direction)` with `up`, `down` or `none`
+  to take an earlier vote back. A flair id is valid only in the subreddit it came from.
+- `blogs` resource (`client.blogs()`): `listBlogs`, `listArticles`, `getArticle`, `createArticle`,
+  `updateArticle`, `deleteArticle`, `listProducts` and `updateProduct` reach the blogs, articles
+  and products a connected site already owns, addressed by the platform's own ids.
+  `updateArticle` edits the live article in place. Reads need the `posts` scope; writes also
+  need `publish`.
+
 ### Changed
 
 - `blog()` matches the live API contract: the workspace travels as `workspace_id` on the query
@@ -116,30 +145,6 @@ All notable changes to this project are documented here. The format follows
 
 - **Breaking:** `BlogSettings.autoPublish` and `BlogParams.Settings.autoPublish(...)`. Every
   article now goes through `submitArticle` before it publishes.
-
-## [0.3.0] - 2026-09-19
-
-### Added
-
-- `ads()`: the campaign tree and its objects, read live from Meta: `accountTree`, and
-  create/get/update/delete/duplicate for campaigns, ad sets and network ads, plus `bulkSetStatus`.
-  The writes need the `publish` scope as well as `ads`.
-- `ads()`: `creatives`, `createCreative` (image, video or carousel), `creative`, `deleteCreative`;
-  `audience`, `updateAudience`, `deleteAudience`, `addAudienceUsers`; `estimateReach`; `insights`
-  and `adInsights` with an optional breakdown and daily timeline.
-- `ads()`: `leadForm`, `archiveLeadForm`, the cursor-paged `leadsFeed`, and `leadPages`,
-  `subscribeLeadPage`, `unsubscribeLeadPage`.
-- `CreateAdParams.urlTags` and `Ad.Creative.urlTags`.
-
-- `inbox()`: `like`, `unlike`, `pin`, `unpin`, `react`, `editComment`, `startConversation`
-  (`StartConversationParams`), `setTyping`, and `reply` with `InboxReplyParams` for media and quick
-  replies. All of them also need the `publish` scope, as does deleting our own reply.
-- `InboxItem` gains `liked`, `pinned`, `reaction`, `editedAt` and the `canLike`, `canPin`,
-  `canEdit`, `canReact`, `canSendMedia`, `canQuickReply` and `canPrivateReply` flags;
-  `InboxAccount` gains `canStartConversation`.
-- `validate` resource (`client.validate()`): `post`, `length` and `media` check a draft, a text
-  length, or a media url against the platform rules without creating a post. Needs the `posts`
-  scope.
 
 ## [0.2.0] - 2026-09-19
 
