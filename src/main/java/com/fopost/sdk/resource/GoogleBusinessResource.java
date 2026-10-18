@@ -36,7 +36,11 @@ public final class GoogleBusinessResource {
         this.http = http;
     }
 
-    /** The connected location, in the Business Information shape. */
+    /**
+     * The connected location, in the Business Information shape.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessLocation} operation.
+     */
     public JsonNode getLocation(String accountId) {
         return ApiClient.unwrap(http.get(path(accountId, "/location"), null));
     }
@@ -46,12 +50,18 @@ public final class GoogleBusinessResource {
      * clears that field. Keys are the API's own snake_case names, such as
      * {@code title}, {@code description}, {@code website_uri} and
      * {@code primary_phone}.
+     *
+     * <p>Wraps the API's {@code updateGoogleBusinessLocation} operation.
      */
     public JsonNode updateLocation(String accountId, Map<String, Object> fields) {
         return ApiClient.unwrap(http.request("PATCH", path(accountId, "/location"), body(fields), null));
     }
 
-    /** The attribute values set on the location. */
+    /**
+     * The attribute values set on the location.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessAttributes} operation.
+     */
     public JsonNode getAttributes(String accountId) {
         return getAttributes(accountId, false, null, null, null);
     }
@@ -72,33 +82,57 @@ public final class GoogleBusinessResource {
         return ApiClient.unwrap(http.get(path(accountId, "/attributes"), query.isEmpty() ? null : query));
     }
 
-    /** Only the named attributes change; every other one is left alone. */
+    /**
+     * Only the named attributes change; every other one is left alone.
+     *
+     * <p>Wraps the API's {@code updateGoogleBusinessAttributes} operation.
+     */
     public JsonNode updateAttributes(String accountId, List<Map<String, Object>> attributes) {
         return ApiClient.unwrap(http.request(
                 "PATCH", path(accountId, "/attributes"), Map.of("attributes", attributes), null));
     }
 
-    /** The location's food menus. */
+    /**
+     * The location's food menus.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessMenus} operation.
+     */
     public JsonNode getMenus(String accountId) {
         return ApiClient.unwrap(http.get(path(accountId, "/menus"), null));
     }
 
-    /** Google has no per-section patch, so the whole menu set is replaced. */
+    /**
+     * Google has no per-section patch, so the whole menu set is replaced.
+     *
+     * <p>Wraps the API's {@code replaceGoogleBusinessMenus} operation.
+     */
     public JsonNode replaceMenus(String accountId, List<Map<String, Object>> menus) {
         return ApiClient.unwrap(http.put(path(accountId, "/menus"), Map.of("menus", menus)));
     }
 
-    /** The location's service list. */
+    /**
+     * The location's service list.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessServices} operation.
+     */
     public JsonNode getServices(String accountId) {
         return ApiClient.unwrap(http.get(path(accountId, "/services"), null));
     }
 
-    /** Replace the whole service list. */
+    /**
+     * Replace the whole service list.
+     *
+     * <p>Wraps the API's {@code replaceGoogleBusinessServices} operation.
+     */
     public JsonNode replaceServices(String accountId, List<Map<String, Object>> serviceItems) {
         return ApiClient.unwrap(http.put(path(accountId, "/services"), Map.of("service_items", serviceItems)));
     }
 
-    /** The photos on the location. */
+    /**
+     * The photos on the location.
+     *
+     * <p>Wraps the API's {@code listGoogleBusinessMedia} operation.
+     */
     public JsonNode listMedia(String accountId) {
         return listMedia(accountId, 0, null);
     }
@@ -115,6 +149,8 @@ public final class GoogleBusinessResource {
     /**
      * Add a photo from the media library. The asset has to be in a workspace
      * the caller can reach, and JPEG or PNG.
+     *
+     * <p>Wraps the API's {@code addGoogleBusinessMedia} operation.
      */
     public JsonNode addMedia(String accountId, String mediaId, String category, String description) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -124,17 +160,29 @@ public final class GoogleBusinessResource {
         return ApiClient.unwrap(http.post(path(accountId, "/media"), body));
     }
 
-    /** Remove a photo by the media key Google returned. */
+    /**
+     * Remove a photo by the media key Google returned.
+     *
+     * <p>Wraps the API's {@code deleteGoogleBusinessMedia} operation.
+     */
     public JsonNode deleteMedia(String accountId, String mediaKey) {
         return ApiClient.unwrap(http.delete(path(accountId, "/media/" + mediaKey)));
     }
 
-    /** The Book, Order and Reserve links on the listing. */
+    /**
+     * The Book, Order and Reserve links on the listing.
+     *
+     * <p>Wraps the API's {@code listGoogleBusinessPlaceActions} operation.
+     */
     public JsonNode listPlaceActions(String accountId) {
         return ApiClient.unwrap(http.get(path(accountId, "/place-actions"), null));
     }
 
-    /** Add an action link to the listing. */
+    /**
+     * Add an action link to the listing.
+     *
+     * <p>Wraps the API's {@code createGoogleBusinessPlaceAction} operation.
+     */
     public JsonNode createPlaceAction(String accountId, String uri, String placeActionType, Boolean isPreferred) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("uri", uri);
@@ -143,7 +191,11 @@ public final class GoogleBusinessResource {
         return ApiClient.unwrap(http.post(path(accountId, "/place-actions"), body));
     }
 
-    /** Patch one action link; a null argument is left alone. */
+    /**
+     * Patch one action link; a null argument is left alone.
+     *
+     * <p>Wraps the API's {@code updateGoogleBusinessPlaceAction} operation.
+     */
     public JsonNode updatePlaceAction(String accountId, String linkId, String uri, Boolean isPreferred) {
         Map<String, Object> body = new LinkedHashMap<>();
         putIfPresent(body, "uri", uri);
@@ -152,12 +204,20 @@ public final class GoogleBusinessResource {
                 http.request("PATCH", path(accountId, "/place-actions/" + linkId), body, null));
     }
 
-    /** Remove one action link. */
+    /**
+     * Remove one action link.
+     *
+     * <p>Wraps the API's {@code deleteGoogleBusinessPlaceAction} operation.
+     */
     public JsonNode deletePlaceAction(String accountId, String linkId) {
         return ApiClient.unwrap(http.delete(path(accountId, "/place-actions/" + linkId)));
     }
 
-    /** The ways Google will let this location be verified. */
+    /**
+     * The ways Google will let this location be verified.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessVerificationOptions} operation.
+     */
     public JsonNode getVerificationOptions(String accountId) {
         return getVerificationOptions(accountId, null);
     }
@@ -172,6 +232,8 @@ public final class GoogleBusinessResource {
      * Start a verification. {@code method} is {@code ADDRESS}, {@code EMAIL},
      * {@code PHONE_CALL}, {@code SMS}, {@code AUTO} or {@code VETTED_PARTNER};
      * the response names the pending verification to complete with the PIN.
+     *
+     * <p>Wraps the API's {@code startGoogleBusinessVerification} operation.
      */
     public JsonNode startVerification(String accountId, String method, Map<String, Object> options) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -182,7 +244,11 @@ public final class GoogleBusinessResource {
         return ApiClient.unwrap(http.post(path(accountId, "/verification/start"), body));
     }
 
-    /** Complete a pending verification with the PIN Google sent. */
+    /**
+     * Complete a pending verification with the PIN Google sent.
+     *
+     * <p>Wraps the API's {@code completeGoogleBusinessVerification} operation.
+     */
     public JsonNode completeVerification(String accountId, String verificationName, String pin) {
         return ApiClient.unwrap(http.post(
                 path(accountId, "/verification/complete"),
@@ -192,6 +258,8 @@ public final class GoogleBusinessResource {
     /**
      * Daily impressions, calls, direction requests and clicks for the range.
      * A null or empty {@code dailyMetrics} leaves the API's own default set.
+     *
+     * <p>Wraps the API's {@code getGoogleBusinessPerformance} operation.
      */
     public JsonNode getPerformance(String accountId, String startDate, String endDate, List<String> dailyMetrics) {
         Map<String, Object> query = new LinkedHashMap<>();
@@ -216,6 +284,8 @@ public final class GoogleBusinessResource {
     /**
      * Hand the location to another workspace the caller owns. The connection
      * and every row keyed to it move in one transaction.
+     *
+     * <p>Wraps the API's {@code assignGoogleBusinessLocation} operation.
      */
     public JsonNode assign(String accountId, String workspaceId) {
         return ApiClient.unwrap(http.post(path(accountId, "/assign"), Map.of("workspace_id", workspaceId)));

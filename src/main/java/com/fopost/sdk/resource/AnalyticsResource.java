@@ -6,6 +6,7 @@ import com.fopost.sdk.model.CollectPostResult;
 import com.fopost.sdk.model.CollectSummary;
 import com.fopost.sdk.model.ContentDecay;
 import com.fopost.sdk.model.Demographics;
+import com.fopost.sdk.model.InboxAnalytics;
 import com.fopost.sdk.model.LabelAnalytics;
 import com.fopost.sdk.model.MetricChangePage;
 import com.fopost.sdk.model.NativePost;
@@ -76,6 +77,28 @@ public final class AnalyticsResource {
     public Demographics demographics(AnalyticsParams params) {
         return http.convert(
                 ApiClient.unwrap(http.get("/v1/analytics/demographics", params.toQuery())), Demographics.class);
+    }
+
+    /**
+     * How the inbox performed: volume received and sent, reply coverage, median first-reply time,
+     * per-platform and per-account rows, response-time buckets and a weekday-by-hour heatmap.
+     * Honours {@code accountId}, {@code workspaceId} and {@code days}; {@code tz} buckets the
+     * heatmap and defaults to UTC.
+     */
+    public InboxAnalytics inbox(AnalyticsParams params, String tz) {
+        Map<String, Object> query = new LinkedHashMap<>();
+        if (params != null) {
+            // This endpoint reads the account under its snake_case name only.
+            params.toQuery().forEach((key, value) -> query.put("accountId".equals(key) ? "account_id" : key, value));
+        }
+        if (tz != null) {
+            query.put("tz", tz);
+        }
+        return http.convert(ApiClient.unwrap(http.get("/v1/analytics/inbox", query)), InboxAnalytics.class);
+    }
+
+    public InboxAnalytics inbox(AnalyticsParams params) {
+        return inbox(params, null);
     }
 
     /** Fetch fresh figures from the platforms now, rather than waiting for the next scheduled pass. */

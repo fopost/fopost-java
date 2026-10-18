@@ -9,12 +9,12 @@ Official Java SDK for the [FoPost](https://fopost.com) API. Schedule and publish
 <dependency>
   <groupId>com.fopost</groupId>
   <artifactId>fopost-java</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.fopost:fopost-java:0.3.0")
+implementation("com.fopost:fopost-java:0.4.0")
 ```
 
 Requires Java 17 or newer. HTTP goes through the JDK's own client; the only dependency is Jackson.
@@ -97,15 +97,15 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 
 | Namespace       | Methods                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `posts()`       | `list`, `autoPaginate`, `stream`, `get`, `create`, `update`, `delete`, `duplicate`, `publish`, `retry`, `cancel`, `preflight`, `deliveries`, `publishRuns`, `analytics`, `bulkShift`, `bulkLabel`, `bulkDelete`, `validateImport`, `commitImport`, `rollbackImport` |
+| `posts()`       | `list`, `autoPaginate`, `stream`, `get`, `create`, `update`, `delete`, `duplicate`, `publish`, `retry`, `cancel`, `preflight`, `deliveries`, `publishRuns`, `analytics`, `bulkShift`, `bulkLabel`, `bulkDelete`, `validateImport`, `commitImport`, `rollbackImport`, `unpublish` |
 | `workspaces()`  | `list`, `get`, `create`, `update`, `delete`, `analytics`                                                                                                                                     |
 | `accounts()`    | `list`, `get`, `create`, `rename`, `move`, `delete`, `healthSummary`, `health`, `togglePrimary`, `validate`, `refreshToken`, `analytics`, `createTelegramConnectCode`, `getTelegramConnectStatus`, `getTelegramBotCommands`, `setTelegramBotCommands`, `deleteTelegramBotCommands`, `redditSubreddits`, `redditSubredditRules`, `redditFlairs`, `setRedditDefaultSubreddit`, `listSlackChannels`, `listSlackMembers`, `getSlackIdentity`, `updateSlackIdentity`, `getIceBreakers`, `setIceBreakers`, `deleteIceBreakers`, `getPersistentMenu`, `setPersistentMenu`, `deletePersistentMenu`, `getGreeting`, `setGreeting`, `deleteGreeting`, `getWebhookSubscription`, `resubscribeWebhook`, `communities()`, `listDiscordChannels`, `switchDiscordChannel`, `getDiscordIdentity`, `updateDiscordIdentity`, `listDiscordPins`, `deleteDiscordMessage`, `pinDiscordMessage`, `unpinDiscordMessage`, `crosspostDiscordMessage`, `createDiscordThread`, `sendDiscordDm`, `listDiscordEvents`, `getDiscordEvent`, `createDiscordEvent`, `updateDiscordEvent`, `deleteDiscordEvent`, `listDiscordMembers`, `getDiscordMember`, `listDiscordRoles`, `createDiscordRole`, `updateDiscordRole`, `deleteDiscordRole`, `addDiscordMemberRole`, `removeDiscordMemberRole`, `platformMetrics` |
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
-| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `verify`                                                                                                                                       |
+| `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `deliveries`, `delivery`, `redeliver`, `verify`                                                                                                                                       |
 | `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
-| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`          |
-| `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`                                                                                                     |
+| `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox`          |
+| `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`, `versions`, `version`, `restoreVersion`                                                                                                     |
 | `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `vote`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `passThreadControl`, `takeThreadControl`, `handover`, `listApprovals`, `approveReply`, `rejectReply` |
@@ -122,6 +122,9 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `googleBusiness()` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `blogs()`       | `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`, `deleteArticle`, `listProducts`, `updateProduct`                                                                |
 | `validate()`    | `post`, `length`, `media`, `subreddit`                                                                                                                                                                |
+| `queue()`       | `listSlots`, `createSlot`, `updateSlot`, `deleteSlot`, `next`, `preview` |
+| `connectSessions()` | `create`, `get` |
+| `logs()`        | `list` |
 | `activity()`    | `list`                                                                                                                                                                                      |
 
 `accounts().communities()` covers the X communities an account can post into: `list`, `sync`,
