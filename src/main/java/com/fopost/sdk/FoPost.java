@@ -24,6 +24,7 @@ import com.fopost.sdk.resource.GoogleBusinessResource;
 import com.fopost.sdk.resource.LabelsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
+import com.fopost.sdk.resource.QueueResource;
 import com.fopost.sdk.resource.SequencesResource;
 import com.fopost.sdk.resource.ValidateResource;
 import com.fopost.sdk.resource.WebhooksResource;
@@ -67,6 +68,7 @@ public final class FoPost {
 
     private final ApiClient http;
     private final PostsResource posts;
+    private final QueueResource queue;
     private final AccountsResource accounts;
     private final AccountGroupsResource accountGroups;
     private final WorkspacesResource workspaces;
@@ -93,6 +95,7 @@ public final class FoPost {
     private FoPost(ApiClient http) {
         this.http = http;
         this.posts = new PostsResource(http);
+        this.queue = new QueueResource(http);
         this.googleBusiness = new GoogleBusinessResource(http);
         this.accounts = new AccountsResource(http);
         this.accountGroups = new AccountGroupsResource(http);
@@ -132,6 +135,11 @@ public final class FoPost {
 
     public PostsResource posts() {
         return posts;
+    }
+
+    /** The posting queue: weekly slots and the times a queued post would get. */
+    public QueueResource queue() {
+        return queue;
     }
 
     public AccountsResource accounts() {
