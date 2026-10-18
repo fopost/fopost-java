@@ -1,4 +1,7 @@
 package com.fopost.sdk.model;
 
-/** The outcome of a test delivery to the website target. {@code status} is the site's HTTP answer. */
-public record BlogWebsiteTest(boolean ok, Integer status, String error) {}
+/**
+ * The outcome of a test delivery to the website target. {@code httpStatus} is the site's HTTP
+ * answer; {@code error} says why a failed test failed.
+ */
+public record BlogWebsiteTest(boolean ok, Integer httpStatus, String error) {}

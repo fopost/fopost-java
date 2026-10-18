@@ -55,6 +55,24 @@ public final class BlogParams {
             return this;
         }
 
+        /** One of {@link com.fopost.sdk.model.BlogGoal}; null clears it. */
+        public Settings goal(String goal) {
+            body.put("goal", goal);
+            return this;
+        }
+
+        /** What the blog wants to write about; null clears it. */
+        public Settings focusTopics(String focusTopics) {
+            body.put("focusTopics", focusTopics);
+            return this;
+        }
+
+        /** What the blog never writes about; null clears it. */
+        public Settings avoidTopics(String avoidTopics) {
+            body.put("avoidTopics", avoidTopics);
+            return this;
+        }
+
         public Settings language(String language) {
             body.put("language", language);
             return this;
@@ -71,14 +89,9 @@ public final class BlogParams {
             return this;
         }
 
-        /** Days a draft waits for review before it may auto-publish, 0 to 14. */
+        /** Days before its planned date that a picked keyword starts being written, 0 to 14. */
         public Settings reviewHoldDays(int reviewHoldDays) {
             body.put("reviewHoldDays", reviewHoldDays);
-            return this;
-        }
-
-        public Settings autoPublish(boolean autoPublish) {
-            body.put("autoPublish", autoPublish);
             return this;
         }
 
@@ -191,7 +204,10 @@ public final class BlogParams {
             return new KeywordUpdate();
         }
 
-        /** One of {@link com.fopost.sdk.model.BlogKeywordStatus}. */
+        /**
+         * One of {@link com.fopost.sdk.model.BlogKeywordStatus}. {@code planned} picks the keyword and
+         * gives it the next free date.
+         */
         public KeywordUpdate status(String status) {
             body.put("status", status);
             return this;
@@ -244,7 +260,7 @@ public final class BlogParams {
         }
     }
 
-    /** Edits a draft. Only a draft or scheduled article is editable; anything else answers 409. */
+    /** Edits an article. One still being written or already publishing answers 409. */
     public static final class ArticleUpdate {
 
         private final Map<String, Object> body = new LinkedHashMap<>();
@@ -289,7 +305,10 @@ public final class BlogParams {
             return this;
         }
 
-        /** Puts the draft on the calendar; null returns it to review. */
+        /**
+         * Puts an article in review on the calendar; a draft answers 409 until it is submitted. Null
+         * returns it to draft.
+         */
         public ArticleUpdate publishAt(Instant publishAt) {
             body.put("publishAt", Params.iso(publishAt));
             return this;
