@@ -49,6 +49,9 @@ import com.fopost.sdk.model.TikTokPlace;
 import com.fopost.sdk.model.TikTokVideoSource;
 import com.fopost.sdk.model.TokenRefresh;
 import com.fopost.sdk.model.WebhookSubscription;
+import com.fopost.sdk.model.XFollowResult;
+import com.fopost.sdk.model.XPost;
+import com.fopost.sdk.model.XSearchPage;
 import com.fopost.sdk.param.CreateAccountParams;
 import com.fopost.sdk.param.DiscordEventParams;
 import com.fopost.sdk.param.DiscordRoleParams;
@@ -61,6 +64,7 @@ import com.fopost.sdk.param.CreatePinterestBoardParams;
 import com.fopost.sdk.param.CreateYouTubePlaylistParams;
 import com.fopost.sdk.param.UpdateSlackIdentityParams;
 import com.fopost.sdk.param.UploadYouTubeCaptionsParams;
+import com.fopost.sdk.param.XSearchParams;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,6 +166,46 @@ public final class AccountsResource {
         Map<String, Object> params = refresh ? query("refresh", "true") : null;
         return http.convert(
                 ApiClient.unwrap(http.get("/v1/accounts/" + accountId + "/health", params)), AccountHealth.class);
+    }
+
+    /**
+     * Follow an X user as this account. {@code userId} is the numeric X user id. Needs the
+     * {@code inbox} and {@code publish} scopes. A non-X account is a 404; an X account connected
+     * before the follow grant answers 409 {@code reconnect_required} until it is reconnected; a
+     * spent X balance answers 402 {@code platform_balance_spent}.
+     */
+    public XFollowResult followXUser(String accountId, String userId) {
+        return xFollow(accountId, "/x/follow", userId);
+    }
+
+    /** Unfollow an X user as this account. Same scopes and errors as {@code followXUser}. */
+    public XFollowResult unfollowXUser(String accountId, String userId) {
+        return xFollow(accountId, "/x/unfollow", userId);
+    }
+
+    private XFollowResult xFollow(String accountId, String action, String userId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("user_id", userId);
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/accounts/" + accountId + action, body)), XFollowResult.class);
+    }
+
+    /**
+     * One X post by its id, read with {@code accountId}'s token. Needs the {@code inbox} scope.
+     * 404 when X has no such post. Every read is an X API call metered to the workspace.
+     */
+    public XPost getXPost(String postId, String accountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/x/posts/" + postId, query("account_id", accountId))), XPost.class);
+    }
+
+    /**
+     * Recent X posts matching a query, read with the account's token. Needs the {@code inbox}
+     * scope. Pass {@code meta().nextToken()} back through {@code XSearchParams.nextToken} for the
+     * next page. Every read is an X API call metered to the workspace.
+     */
+    public XSearchPage searchXPosts(XSearchParams params) {
+        return http.convert(http.get("/v1/x/search", params.toQuery()), XSearchPage.class);
     }
 
     /**
