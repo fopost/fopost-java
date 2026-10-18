@@ -71,14 +71,16 @@ class AdsTikTokTest {
 
     @Test
     void conversionsReportWhatTheNetworkAccepted() {
-        FakeTransport transport = new FakeTransport().enqueue(202, "{\"data\":{\"accepted\":2}}");
+        FakeTransport transport = new FakeTransport()
+                .enqueue(202, "{\"data\":{\"id\":\"b1\",\"accepted\":2,\"eventCount\":2,\"replayed\":false}}");
 
         long accepted = TestSupport.client(transport)
                 .ads()
                 .uploadConversions(UploadConversionsParams.of("w1", "c1", "7011", "px_1")
                         .event("CompletePayment", "2026-09-18T10:04:00Z")
                         .with("valueMinor", 4999)
-                        .event("CompletePayment", "2026-09-18T11:04:00Z"));
+                        .event("CompletePayment", "2026-09-18T11:04:00Z"))
+                .accepted();
 
         assertEquals(2L, accepted);
         assertTrue(transport.lastBody().contains("\"pixelId\":\"px_1\""));

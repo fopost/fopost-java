@@ -80,6 +80,16 @@ import com.fopost.sdk.param.LeadsFeedParams;
 import com.fopost.sdk.param.ReachEstimateParams;
 import com.fopost.sdk.param.UpdateAdCampaignParams;
 import com.fopost.sdk.param.UpdateAdSetParams;
+import com.fopost.sdk.model.AdPixel;
+import com.fopost.sdk.model.AdPixelDetail;
+import com.fopost.sdk.model.AdPixelStats;
+import com.fopost.sdk.model.ConversionBatch;
+import com.fopost.sdk.model.ConversionUploadResult;
+import com.fopost.sdk.model.CustomConversion;
+import com.fopost.sdk.model.EventMatchQuality;
+import com.fopost.sdk.param.CreateCustomConversionParams;
+import com.fopost.sdk.param.UpdateCustomConversionParams;
+import com.fopost.sdk.param.UpdatePixelParams;
 import com.fopost.sdk.param.UploadConversionsParams;
 import com.fopost.sdk.param.UpdateAudienceParams;
 import com.fopost.sdk.param.UpdateConversionRuleParams;
@@ -705,12 +715,155 @@ public final class AdsResource {
 
     /**
      * Offline conversions against a pixel the ad account owns. Identifiers are
-     * hashed before anything leaves FoPost. Returns how many the network took.
+     * hashed before anything leaves FoPost. {@code accepted} is how many the network took.
      */
-    public long uploadConversions(UploadConversionsParams params) {
-        return ApiClient.unwrap(http.post("/v1/ads/conversions", params.toMap()))
-                .path("accepted")
-                .asLong();
+    public ConversionUploadResult uploadConversions(UploadConversionsParams params) {
+        return uploadConversions(params, null);
+    }
+
+    /** As above, with an optional {@code Idempotency-Key}; a repeat answers {@code replayed}. */
+    public ConversionUploadResult uploadConversions(UploadConversionsParams params, String idempotencyKey) {
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "POST", "/v1/ads/conversions", params.toMap(), null, idempotencyHeader(idempotencyKey))),
+                ConversionUploadResult.class);
+    }
+
+    /**
+     * The idempotent send: the same key within the retention window answers the stored batch
+     * with {@code replayed} true and sends nothing. Same body as {@link #uploadConversions}.
+     */
+    public ConversionUploadResult sendPixelConversions(UploadConversionsParams params, String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("idempotencyKey is required");
+        }
+        return http.convert(
+                ApiClient.unwrap(http.request(
+                        "POST",
+                        "/v1/ads/conversions/events",
+                        params.toMap(),
+                        null,
+                        idempotencyHeader(idempotencyKey))),
+                ConversionUploadResult.class);
+    }
+
+    /** Stored conversion batches, newest first. Every argument may be null. */
+    public List<ConversionBatch> listConversionBatches(String workspaceId, String connectionId, Integer limit) {
+        Map<String, Object> query = workspaceQuery(workspaceId);
+        if (connectionId != null) {
+            query.put("connection_id", connectionId);
+        }
+        if (limit != null) {
+            query.put("limit", limit);
+        }
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/conversions/events", query)), ConversionBatch.class);
+    }
+
+    public List<AdPixel> pixels(String workspaceId, String connectionId, String adAccountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get("/v1/ads/pixels", accountQuery(workspaceId, connectionId, adAccountId))),
+                AdPixel.class);
+    }
+
+    /** Creates a pixel; the answer carries the script to place on the site. */
+    public AdPixelDetail createPixel(String workspaceId, String connectionId, String adAccountId, String name) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspaceId", workspaceId);
+        body.put("connectionId", connectionId);
+        body.put("adAccountId", adAccountId);
+        body.put("name", name);
+        return http.convert(ApiClient.unwrap(http.post("/v1/ads/pixels", body)), AdPixelDetail.class);
+    }
+
+    public AdPixelDetail pixel(String pixelId, String workspaceId, String connectionId, String adAccountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(
+                        pixelPath(pixelId, ""), accountQuery(workspaceId, connectionId, adAccountId))),
+                AdPixelDetail.class);
+    }
+
+    public AdPixelDetail updatePixel(String pixelId, UpdatePixelParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.patch(pixelPath(pixelId, ""), params.toMap())), AdPixelDetail.class);
+    }
+
+    /** Shares the pixel with another ad account under the same business portfolio. */
+    public void sharePixel(
+            String pixelId, String workspaceId, String connectionId, String adAccountId, String targetAdAccountId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspaceId", workspaceId);
+        body.put("connectionId", connectionId);
+        body.put("adAccountId", adAccountId);
+        body.put("targetAdAccountId", targetAdAccountId);
+        http.post(pixelPath(pixelId, "/share"), body);
+    }
+
+    /** Event counts over the last 28 days. */
+    public AdPixelStats pixelStats(String pixelId, String workspaceId, String connectionId, String adAccountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(
+                        pixelPath(pixelId, "/stats"), accountQuery(workspaceId, connectionId, adAccountId))),
+                AdPixelStats.class);
+    }
+
+    /** The network's event match quality per event. */
+    public List<EventMatchQuality> eventMatchQuality(
+            String pixelId, String workspaceId, String connectionId, String adAccountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        pixelPath(pixelId, "/match-quality"),
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                EventMatchQuality.class);
+    }
+
+    public List<CustomConversion> customConversions(String workspaceId, String connectionId, String adAccountId) {
+        return http.convertList(
+                ApiClient.unwrap(http.get(
+                        "/v1/ads/custom-conversions", accountQuery(workspaceId, connectionId, adAccountId))),
+                CustomConversion.class);
+    }
+
+    public CustomConversion createCustomConversion(CreateCustomConversionParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/ads/custom-conversions", params.toMap())), CustomConversion.class);
+    }
+
+    public CustomConversion customConversion(
+            String customConversionId, String workspaceId, String connectionId, String adAccountId) {
+        return http.convert(
+                ApiClient.unwrap(http.get(
+                        customConversionPath(customConversionId),
+                        accountQuery(workspaceId, connectionId, adAccountId))),
+                CustomConversion.class);
+    }
+
+    public CustomConversion updateCustomConversion(String customConversionId, UpdateCustomConversionParams params) {
+        return http.convert(
+                ApiClient.unwrap(http.patch(customConversionPath(customConversionId), params.toMap())),
+                CustomConversion.class);
+    }
+
+    /** The account travels in the body, because the path already carries the conversion. */
+    public void deleteCustomConversion(
+            String customConversionId, String workspaceId, String connectionId, String adAccountId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspaceId", workspaceId);
+        body.put("connectionId", connectionId);
+        body.put("adAccountId", adAccountId);
+        http.request("DELETE", customConversionPath(customConversionId), body, null);
+    }
+
+    private static Map<String, String> idempotencyHeader(String key) {
+        return key == null ? null : Map.of("Idempotency-Key", key);
+    }
+
+    private static String pixelPath(String pixelId, String suffix) {
+        return "/v1/ads/pixels/" + pixelId + suffix;
+    }
+
+    private static String customConversionPath(String id) {
+        return "/v1/ads/custom-conversions/" + id;
     }
 
     public AdCommentsPage comments(String connectionId, String adId) {
