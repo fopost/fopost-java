@@ -4,5 +4,5 @@ package com.fopost.sdk.internal;
 public final class Version {
     private Version() {}
 
-    public static final String VALUE = "0.3.0";
+    public static final String VALUE = "0.4.0";
 }

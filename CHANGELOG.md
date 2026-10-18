@@ -24,6 +24,34 @@ All notable changes to this project are documented here. The format follows
 - `ads().uploadConversions` returns `ConversionUploadResult` (`id`, `accepted`, `eventCount`,
   `replayed`) instead of the accepted count, and takes an optional `idempotencyKey`.
 
+## [0.4.0] - 2026-10-18
+
+### Added
+
+- `queue()` for the posting queue: `listSlots`, `createSlot`, `updateSlot`, `deleteSlot`, `next` and
+  `preview`, with the `QueueSlot`, `QueueSlotUpdate`, `QueueSlotDeleted` and `QueueSlotMove` records
+  and the `QueueSlotParams` builder. `CreatePostParams.queue()` and `UpdatePostParams.queue()` send
+  `schedule: queue`, which puts the post in the next free slot. Needs `posts`.
+- `posts().unpublish` takes a live post down on every network and answers an `UnpublishResult`
+  with one `Removal` per network. Needs `publish`.
+- `connectSessions()`: `create` mints a hosted connect link for one of your own users and `get`
+  reads the session, with the `ConnectSession` record and the `ConnectSessionParams` builder.
+  Needs `accounts`.
+- `webhooks().deliveries`, `delivery` and `redeliver`: the delivery log of an endpoint, one
+  attempt, and sending an event again, with the `WebhookDelivery` record. Needs `webhooks`.
+- `automations().versions`, `version` and `restoreVersion`: the saved graph history and a restore
+  that writes a new version on top of it, with `AutomationVersion`, `AutomationVersionPage`,
+  `AutomationGraph` and `AutomationRestore`. Needs `automations`.
+- `logs().list` reads the request log, newest first, with `LogParams` filters and a `LogPage`
+  carrying the cursor and the window summary. Needs `workspaces`.
+- `analytics().inbox` answers the inbox aggregates as an `InboxAnalytics` record. Needs
+  `analytics`.
+
+### Changed
+
+- The javadoc of every method that builds its path from a helper now names the API operation it
+  wraps, so the operation list and the SDK can be checked against each other.
+
 ## [0.3.0] - 2026-10-18
 
 ### Added

@@ -31,6 +31,7 @@ public final class CreatePostParams {
     private String contentType;
     private String artifactType;
     private Instant scheduleAt;
+    private String schedule;
     private Boolean repeatable;
     private Integer repeatableTimes;
     private Integer repeatableGap;
@@ -107,6 +108,12 @@ public final class CreatePostParams {
 
     public CreatePostParams scheduleAt(Instant scheduleAt) {
         this.scheduleAt = scheduleAt;
+        return this;
+    }
+
+    /** Put the post in the next free posting-queue slot instead of pinning a time. */
+    public CreatePostParams queue() {
+        this.schedule = "queue";
         return this;
     }
 
@@ -198,6 +205,7 @@ public final class CreatePostParams {
         Params.put(body, "content_type", contentType);
         Params.put(body, "artifact_type", artifactType);
         Params.put(body, "schedule_at", Params.iso(scheduleAt));
+        Params.put(body, "schedule", schedule);
         Params.put(body, "repeatable", repeatable);
         Params.put(body, "repeatable_times", repeatableTimes);
         Params.put(body, "repeatable_gap", repeatableGap);

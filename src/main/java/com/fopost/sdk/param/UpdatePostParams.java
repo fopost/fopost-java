@@ -59,6 +59,12 @@ public final class UpdatePostParams {
         return this;
     }
 
+    /** Move the post to the next free posting-queue slot. */
+    public UpdatePostParams queue() {
+        body.put("schedule", "queue");
+        return this;
+    }
+
     public UpdatePostParams contentType(String contentType) {
         body.put("content_type", contentType);
         return this;

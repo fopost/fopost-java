@@ -1235,13 +1235,21 @@ public final class AdsResource {
                 ReachFrequencyPrediction.class);
     }
 
-    /** Holds the inventory the prediction priced. Also needs the {@code publish} scope. */
+    /**
+     * Holds the inventory the prediction priced. Also needs the {@code publish} scope.
+     *
+     * <p>Wraps the API's {@code reserveReachFrequency} operation.
+     */
     public ReachFrequencyPrediction reserveReachFrequency(
             String predictionId, ReachFrequencyActionParams params) {
         return reachFrequencyAction(predictionId, "reserve", params);
     }
 
-    /** Also needs the {@code publish} scope. */
+    /**
+     * Also needs the {@code publish} scope.
+     *
+     * <p>Wraps the API's {@code cancelReachFrequency} operation.
+     */
     public ReachFrequencyPrediction cancelReachFrequency(
             String predictionId, ReachFrequencyActionParams params) {
         return reachFrequencyAction(predictionId, "cancel", params);

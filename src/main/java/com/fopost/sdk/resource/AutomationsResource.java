@@ -3,9 +3,12 @@ package com.fopost.sdk.resource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.model.Automation;
+import com.fopost.sdk.model.AutomationRestore;
 import com.fopost.sdk.model.AutomationRun;
 import com.fopost.sdk.model.AutomationStats;
 import com.fopost.sdk.model.AutomationTrigger;
+import com.fopost.sdk.model.AutomationVersion;
+import com.fopost.sdk.model.AutomationVersionPage;
 import com.fopost.sdk.model.Page;
 import com.fopost.sdk.model.PageMeta;
 import com.fopost.sdk.param.AutomationParams;
@@ -85,6 +88,43 @@ public final class AutomationsResource {
                 ApiClient.unwrap(http.post("/v1/automations/" + automationId + "/trigger",
                         payload == null ? Map.of() : payload)),
                 AutomationTrigger.class);
+    }
+
+    /** Every saved graph, newest first, with the nodes each save added and removed. */
+    public AutomationVersionPage versions(String automationId) {
+        return versions(automationId, null, null);
+    }
+
+    public AutomationVersionPage versions(String automationId, Integer page, Integer perPage) {
+        Map<String, Object> query = new LinkedHashMap<>();
+        if (page != null) {
+            query.put("page", page);
+        }
+        if (perPage != null) {
+            query.put("per_page", perPage);
+        }
+        JsonNode body = http.get("/v1/automations/" + automationId + "/versions", query);
+        return new AutomationVersionPage(
+                http.convertList(body.path("data"), AutomationVersion.class),
+                http.convert(body.path("meta"), AutomationVersionPage.Meta.class));
+    }
+
+    /** One version, with its full graph. */
+    public AutomationVersion version(String automationId, int version) {
+        return http.convert(
+                ApiClient.unwrap(http.get("/v1/automations/" + automationId + "/versions/" + version, null)),
+                AutomationVersion.class);
+    }
+
+    /**
+     * Save that version's graph as a new version on top of the history; nothing is rewritten. The
+     * old graph must still validate under the automation's current trigger and workspace.
+     */
+    public AutomationRestore restoreVersion(String automationId, int version) {
+        return http.convert(
+                ApiClient.unwrap(http.post(
+                        "/v1/automations/" + automationId + "/versions/" + version + "/restore", null)),
+                AutomationRestore.class);
     }
 
     public AutomationStats stats() {

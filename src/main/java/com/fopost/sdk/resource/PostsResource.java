@@ -21,6 +21,7 @@ import com.fopost.sdk.model.PreflightResult;
 import com.fopost.sdk.model.PublishResult;
 import com.fopost.sdk.model.PublishRun;
 import com.fopost.sdk.model.RetryResult;
+import com.fopost.sdk.model.UnpublishResult;
 import com.fopost.sdk.model.UploadLimits;
 import com.fopost.sdk.model.UploadedMedia;
 import com.fopost.sdk.param.CreatePostParams;
@@ -196,6 +197,16 @@ public final class PostsResource {
             body.put("accountIds", accountIds);
         }
         return http.convert(ApiClient.unwrap(http.post("/v1/posts/" + postId + "/cancel", body)), CancelResult.class);
+    }
+
+    /**
+     * Delete the post on every network it is live on. Each delivery becomes {@code unpublished} and
+     * the post stays as a record. Refused with 409 and {@code unsupported_platforms} when one of
+     * those networks cannot delete a live post. Needs the {@code publish} scope.
+     */
+    public UnpublishResult unpublish(String postId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/posts/" + postId + "/unpublish", null)), UnpublishResult.class);
     }
 
     /** Per-account blockers and advisory content signals, without publishing anything. */

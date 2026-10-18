@@ -15,6 +15,7 @@ import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
 import com.fopost.sdk.resource.BlogResource;
 import com.fopost.sdk.resource.BroadcastsResource;
+import com.fopost.sdk.resource.ConnectSessionsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.BlogsResource;
 import com.fopost.sdk.resource.InboxResource;
@@ -22,8 +23,10 @@ import com.fopost.sdk.resource.KnowledgeResource;
 import com.fopost.sdk.resource.GoogleAdsResource;
 import com.fopost.sdk.resource.GoogleBusinessResource;
 import com.fopost.sdk.resource.LabelsResource;
+import com.fopost.sdk.resource.LogsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
+import com.fopost.sdk.resource.QueueResource;
 import com.fopost.sdk.resource.SequencesResource;
 import com.fopost.sdk.resource.ValidateResource;
 import com.fopost.sdk.resource.WebhooksResource;
@@ -67,8 +70,10 @@ public final class FoPost {
 
     private final ApiClient http;
     private final PostsResource posts;
+    private final QueueResource queue;
     private final AccountsResource accounts;
     private final AccountGroupsResource accountGroups;
+    private final ConnectSessionsResource connectSessions;
     private final WorkspacesResource workspaces;
     private final KnowledgeResource knowledge;
     private final LabelsResource labels;
@@ -81,6 +86,7 @@ public final class FoPost {
     private final BroadcastsResource broadcasts;
     private final SequencesResource sequences;
     private final ActivityResource activity;
+    private final LogsResource logs;
     private final GoogleBusinessResource googleBusiness;
     private final WhatsappResource whatsapp;
     private final InboxResource inbox;
@@ -93,13 +99,16 @@ public final class FoPost {
     private FoPost(ApiClient http) {
         this.http = http;
         this.posts = new PostsResource(http);
+        this.queue = new QueueResource(http);
         this.googleBusiness = new GoogleBusinessResource(http);
         this.accounts = new AccountsResource(http);
         this.accountGroups = new AccountGroupsResource(http);
+        this.connectSessions = new ConnectSessionsResource(http);
         this.workspaces = new WorkspacesResource(http);
         this.knowledge = new KnowledgeResource(http);
         this.labels = new LabelsResource(http);
         this.activity = new ActivityResource(http);
+        this.logs = new LogsResource(http);
         this.webhooks = new WebhooksResource(http);
         this.analytics = new AnalyticsResource(http);
         this.automations = new AutomationsResource(http);
@@ -134,12 +143,22 @@ public final class FoPost {
         return posts;
     }
 
+    /** The posting queue: weekly slots and the times a queued post would get. */
+    public QueueResource queue() {
+        return queue;
+    }
+
     public AccountsResource accounts() {
         return accounts;
     }
 
     public AccountGroupsResource accountGroups() {
         return accountGroups;
+    }
+
+    /** Hosted links that let your own users connect an account without a FoPost login. */
+    public ConnectSessionsResource connectSessions() {
+        return connectSessions;
     }
 
     public WorkspacesResource workspaces() {
@@ -178,6 +197,11 @@ public final class FoPost {
 
     public ActivityResource activity() {
         return activity;
+    }
+
+    /** The request log: every API call made against a workspace, kept for 30 days. */
+    public LogsResource logs() {
+        return logs;
     }
 
     public AiResource ai() {
