@@ -23,6 +23,7 @@ import com.fopost.sdk.resource.KnowledgeResource;
 import com.fopost.sdk.resource.GoogleAdsResource;
 import com.fopost.sdk.resource.GoogleBusinessResource;
 import com.fopost.sdk.resource.LabelsResource;
+import com.fopost.sdk.resource.LogsResource;
 import com.fopost.sdk.resource.MediaResource;
 import com.fopost.sdk.resource.PostsResource;
 import com.fopost.sdk.resource.QueueResource;
@@ -85,6 +86,7 @@ public final class FoPost {
     private final BroadcastsResource broadcasts;
     private final SequencesResource sequences;
     private final ActivityResource activity;
+    private final LogsResource logs;
     private final GoogleBusinessResource googleBusiness;
     private final WhatsappResource whatsapp;
     private final InboxResource inbox;
@@ -106,6 +108,7 @@ public final class FoPost {
         this.knowledge = new KnowledgeResource(http);
         this.labels = new LabelsResource(http);
         this.activity = new ActivityResource(http);
+        this.logs = new LogsResource(http);
         this.webhooks = new WebhooksResource(http);
         this.analytics = new AnalyticsResource(http);
         this.automations = new AutomationsResource(http);
@@ -194,6 +197,11 @@ public final class FoPost {
 
     public ActivityResource activity() {
         return activity;
+    }
+
+    /** The request log: every API call made against a workspace, kept for 30 days. */
+    public LogsResource logs() {
+        return logs;
     }
 
     public AiResource ai() {
