@@ -24,8 +24,8 @@ import java.util.Map;
  * {@code suggestSeeds}, {@code planKeywords}, {@code requestArticle} and {@code regenerateArticle}
  * spend AI credits and need {@code ai}; an empty balance answers 402. {@code publishArticle} needs
  * {@code publish}, answers 409 for a draft that was never submitted, and 409 {@code no_target}
- * until the settings name a target. Every call names the workspace: on the query
- * string for a read, an update or a delete, in the body for a create.
+ * until the settings name a target. Every call names the workspace: as {@code workspace_id} on the
+ * query string for a read, an update or a delete, as {@code workspaceId} in the body for a create.
  *
  * <pre>{@code
  * BlogArticle article = fopost.blog().requestArticle(
@@ -48,7 +48,7 @@ public final class BlogResource {
 
     public BlogSettings getSettings(String workspaceId) {
         return http.convert(
-                ApiClient.unwrap(http.get("/v1/blog/settings", workspace(workspaceId))), BlogSettings.class);
+                ApiClient.unwrap(http.get("/v1/blog/settings", query(workspaceId))), BlogSettings.class);
     }
 
     /**
@@ -59,32 +59,37 @@ public final class BlogResource {
     public BlogSettingsUpdate updateSettings(String workspaceId, BlogParams.Settings params) {
         JsonNode body = http.patch("/v1/blog/settings", withWorkspace(workspaceId, params.toNode()));
         BlogSettings settings = http.convert(ApiClient.unwrap(body), BlogSettings.class);
-        JsonNode secret = body.path("websiteSecret");
+        JsonNode secret = ApiClient.unwrap(body).path("website_secret");
         return new BlogSettingsUpdate(settings, secret.isTextual() ? secret.asText() : null);
     }
 
     /** Issue a new website signing secret. The old one stops verifying at once. */
     public String rotateWebsiteSecret(String workspaceId) {
-        JsonNode body = ApiClient.unwrap(http.post("/v1/blog/settings/website-secret", workspace(workspaceId)));
-        return body.path("websiteSecret").asText(null);
+        JsonNode body = ApiClient.unwrap(http.post("/v1/blog/settings/website-secret", body(workspaceId)));
+        return body.path("website_secret").asText(null);
     }
 
     /**
      * Send a signed {@code article.test} delivery to the website target. A site that does not
-     * answer 2xx comes back with {@code ok} false and its status, rather than as an exception.
+     * answer 2xx comes back with {@code ok} false, its {@code httpStatus} and the reason, rather
+     * than as an exception.
      */
     public BlogWebsiteTest testWebsite(String workspaceId) {
         try {
-            return http.convert(
-                    ApiClient.unwrap(http.post("/v1/blog/settings/website-test", workspace(workspaceId))),
-                    BlogWebsiteTest.class);
+            JsonNode body = ApiClient.unwrap(http.post("/v1/blog/settings/website-test", body(workspaceId)));
+            return new BlogWebsiteTest(true, httpStatus(body), null);
         } catch (FoPostException e) {
-            // The API answers 502 with the same {data: {ok, status, error}} body when the site fails.
-            if (e.status() == 502 && e.body() instanceof JsonNode body && body.has("data")) {
-                return http.convert(body.get("data"), BlogWebsiteTest.class);
+            // The API answers 502 website_test_failed, with the site's http_status, when the site fails.
+            if (e.status() == 502 && e.body() instanceof JsonNode body && body.has("http_status")) {
+                return new BlogWebsiteTest(false, httpStatus(body), e.getMessage());
             }
             throw e;
         }
+    }
+
+    private static Integer httpStatus(JsonNode body) {
+        JsonNode status = body.path("http_status");
+        return status.isNumber() ? status.asInt() : null;
     }
 
     // ── Keywords ──
@@ -94,7 +99,7 @@ public final class BlogResource {
     }
 
     public List<BlogKeyword> listKeywords(String workspaceId, BlogParams.Filter filter) {
-        Map<String, Object> query = workspace(workspaceId);
+        Map<String, Object> query = query(workspaceId);
         query.putAll(filter.toQuery());
         return http.convertList(ApiClient.unwrap(http.get("/v1/blog/keywords", query)), BlogKeyword.class);
     }
@@ -110,7 +115,7 @@ public final class BlogResource {
      * characters, or null) to steer. Spends AI credits.
      */
     public List<String> suggestSeeds(String workspaceId, List<String> seeds, String prompt) {
-        Map<String, Object> body = workspace(workspaceId);
+        Map<String, Object> body = body(workspaceId);
         if (!seeds.isEmpty()) {
             body.put("seeds", seeds);
         }
@@ -136,7 +141,7 @@ public final class BlogResource {
      * Spends AI credits.
      */
     public void planKeywords(String workspaceId, List<String> seeds) {
-        Map<String, Object> body = workspace(workspaceId);
+        Map<String, Object> body = body(workspaceId);
         if (!seeds.isEmpty()) {
             body.put("seeds", seeds);
         }
@@ -144,7 +149,7 @@ public final class BlogResource {
     }
 
     public BlogKeyword addKeyword(String workspaceId, BlogParams.Keyword params) {
-        Map<String, Object> body = workspace(workspaceId);
+        Map<String, Object> body = body(workspaceId);
         body.putAll(params.toMap());
         return http.convert(ApiClient.unwrap(http.post("/v1/blog/keywords", body)), BlogKeyword.class);
     }
@@ -152,12 +157,12 @@ public final class BlogResource {
     public BlogKeyword updateKeyword(String workspaceId, String keywordId, BlogParams.KeywordUpdate params) {
         return http.convert(
                 ApiClient.unwrap(http.request(
-                        "PATCH", "/v1/blog/keywords/" + keywordId, params.toNode(), workspace(workspaceId))),
+                        "PATCH", "/v1/blog/keywords/" + keywordId, params.toNode(), query(workspaceId))),
                 BlogKeyword.class);
     }
 
     public void deleteKeyword(String workspaceId, String keywordId) {
-        http.request("DELETE", "/v1/blog/keywords/" + keywordId, null, workspace(workspaceId));
+        http.request("DELETE", "/v1/blog/keywords/" + keywordId, null, query(workspaceId));
     }
 
     // ── Articles ──
@@ -167,7 +172,7 @@ public final class BlogResource {
     }
 
     public List<BlogArticle> listArticles(String workspaceId, BlogParams.Filter filter) {
-        Map<String, Object> query = workspace(workspaceId);
+        Map<String, Object> query = query(workspaceId);
         query.putAll(filter.toQuery());
         return http.convertList(ApiClient.unwrap(http.get("/v1/blog/articles", query)), BlogArticle.class);
     }
@@ -177,14 +182,14 @@ public final class BlogResource {
      * its status leaves {@code queued} and {@code writing}. Spends AI credits.
      */
     public BlogArticle requestArticle(String workspaceId, BlogParams.Article params) {
-        Map<String, Object> body = workspace(workspaceId);
+        Map<String, Object> body = body(workspaceId);
         body.putAll(params.toMap());
         return http.convert(ApiClient.unwrap(http.post("/v1/blog/articles", body)), BlogArticle.class);
     }
 
     public BlogArticleFull getArticle(String workspaceId, String articleId) {
         return http.convert(
-                ApiClient.unwrap(http.get("/v1/blog/articles/" + articleId, workspace(workspaceId))),
+                ApiClient.unwrap(http.get("/v1/blog/articles/" + articleId, query(workspaceId))),
                 BlogArticleFull.class);
     }
 
@@ -195,7 +200,7 @@ public final class BlogResource {
     public BlogArticleFull updateArticle(String workspaceId, String articleId, BlogParams.ArticleUpdate params) {
         return http.convert(
                 ApiClient.unwrap(http.request(
-                        "PATCH", "/v1/blog/articles/" + articleId, params.toNode(), workspace(workspaceId))),
+                        "PATCH", "/v1/blog/articles/" + articleId, params.toNode(), query(workspaceId))),
                 BlogArticleFull.class);
     }
 
@@ -224,16 +229,22 @@ public final class BlogResource {
     }
 
     public void deleteArticle(String workspaceId, String articleId) {
-        http.request("DELETE", "/v1/blog/articles/" + articleId, null, workspace(workspaceId));
+        http.request("DELETE", "/v1/blog/articles/" + articleId, null, query(workspaceId));
     }
 
     private BlogArticle action(String workspaceId, String articleId, String action) {
         return http.convert(
-                ApiClient.unwrap(http.post("/v1/blog/articles/" + articleId + "/" + action, null, workspace(workspaceId))),
+                ApiClient.unwrap(http.post("/v1/blog/articles/" + articleId + "/" + action, null, query(workspaceId))),
                 BlogArticle.class);
     }
 
-    private static Map<String, Object> workspace(String workspaceId) {
+    private static Map<String, Object> query(String workspaceId) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("workspace_id", workspaceId);
+        return map;
+    }
+
+    private static Map<String, Object> body(String workspaceId) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("workspaceId", workspaceId);
         return map;
