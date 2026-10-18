@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `ads().sendPixelConversions(params, idempotencyKey)` sends Conversions API events with a
+  required `Idempotency-Key`; a replay answers `ConversionUploadResult.replayed()` true.
+  `ads().listConversionBatches` lists what was stored, with hashed identifiers only.
+- Pixels: `ads().pixels`, `createPixel`, `pixel`, `updatePixel`, `sharePixel`, `pixelStats` and
+  `eventMatchQuality`, with `AdPixel`, `AdPixelDetail`, `AdPixelStats` and `EventMatchQuality`.
+- Custom conversions: `ads().customConversions`, `createCustomConversion`, `customConversion`,
+  `updateCustomConversion` and `deleteCustomConversion`, with `CustomConversion` and
+  `CustomConversionRule`.
+- `UploadConversionsParams` events accept `eventId`, `actionSource`, `sourceUrl`, `externalId`,
+  `clientIpAddress`, `clientUserAgent`, `clickId`, `browserId` and `contentIds` through `with`.
+
+### Changed
+
+- `ads().uploadConversions` returns `ConversionUploadResult` (`id`, `accepted`, `eventCount`,
+  `replayed`) instead of the accepted count, and takes an optional `idempotencyKey`.
+
 ## [0.3.0] - 2026-10-18
 
 ### Added
