@@ -231,7 +231,11 @@ public final class BlogResource {
         return action(workspaceId, articleId, "submit");
     }
 
-    /** Take an article out of review without publishing it. */
+    /**
+     * Take an article out of review without publishing it.
+     *
+     * <p>Wraps the API's {@code rejectBlogArticle} operation.
+     */
     public BlogArticle rejectArticle(String workspaceId, String articleId) {
         return action(workspaceId, articleId, "reject");
     }
