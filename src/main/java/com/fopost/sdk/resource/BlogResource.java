@@ -204,7 +204,11 @@ public final class BlogResource {
                 BlogArticleFull.class);
     }
 
-    /** Write the article again from its instructions. Spends AI credits. */
+    /**
+     * Write the article again from its instructions. Spends AI credits.
+     *
+     * <p>Wraps the API's {@code regenerateBlogArticle} operation.
+     */
     public BlogArticle regenerateArticle(String workspaceId, String articleId) {
         return action(workspaceId, articleId, "regenerate");
     }
@@ -218,7 +222,11 @@ public final class BlogResource {
         return action(workspaceId, articleId, "publish");
     }
 
-    /** Move a draft, failed or rejected article to {@code in_review}. Any other state answers 409. */
+    /**
+     * Move a draft, failed or rejected article to {@code in_review}. Any other state answers 409.
+     *
+     * <p>Wraps the API's {@code submitBlogArticle} operation.
+     */
     public BlogArticle submitArticle(String workspaceId, String articleId) {
         return action(workspaceId, articleId, "submit");
     }

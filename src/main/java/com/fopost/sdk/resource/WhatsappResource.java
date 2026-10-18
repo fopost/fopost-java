@@ -39,25 +39,35 @@ public final class WhatsappResource {
 
     // ─── Profile ──────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code getWhatsappProfile} operation. */
     public WhatsappProfile getProfile(String accountId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/profile", null)), WhatsappProfile.class);
     }
 
-    /** A partial update: keys left out of {@code fields} keep their value. */
+    /**
+     * A partial update: keys left out of {@code fields} keep their value.
+     *
+     * <p>Wraps the API's {@code updateWhatsappProfile} operation.
+     */
     public WhatsappProfile updateProfile(String accountId, Map<String, Object> fields) {
         return http.convert(
                 ApiClient.unwrap(http.request("PATCH", base(accountId) + "/profile", fields, null)),
                 WhatsappProfile.class);
     }
 
-    /** A review, not a write: the number keeps its old name until it passes. */
+    /**
+     * A review, not a write: the number keeps its old name until it passes.
+     *
+     * <p>Wraps the API's {@code requestWhatsappDisplayName} operation.
+     */
     public void requestDisplayName(String accountId, String displayName) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("display_name", displayName);
         http.post(base(accountId) + "/profile/display-name", body);
     }
 
+    /** Wraps the API's {@code setWhatsappUsername} operation. */
     public WhatsappProfile setUsername(String accountId, String username) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("username", username);
@@ -68,6 +78,7 @@ public final class WhatsappResource {
 
     // ─── Templates ────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code listWhatsappTemplates} operation. */
     public List<WhatsappTemplate> listTemplates(String accountId) {
         return listTemplates(accountId, null);
     }
@@ -81,7 +92,11 @@ public final class WhatsappResource {
                 ApiClient.unwrap(http.get(base(accountId) + "/templates", query)), WhatsappTemplate.class);
     }
 
-    /** The pre-written templates the platform offers, for adapting. */
+    /**
+     * The pre-written templates the platform offers, for adapting.
+     *
+     * <p>Wraps the API's {@code listWhatsappTemplateLibrary} operation.
+     */
     public List<Map<String, Object>> listTemplateLibrary(String accountId, String search) {
         Map<String, Object> query = new LinkedHashMap<>();
         if (search != null) {
@@ -94,6 +109,7 @@ public final class WhatsappResource {
                 .toList();
     }
 
+    /** Wraps the API's {@code getWhatsappTemplate} operation. */
     public WhatsappTemplate getTemplate(String accountId, String templateId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/templates/" + templateId, null)),
@@ -103,6 +119,8 @@ public final class WhatsappResource {
     /**
      * Files a template for review. The result carries the status the platform
      * assigned, which is {@code PENDING} on a normal submission.
+     *
+     * <p>Wraps the API's {@code createWhatsappTemplate} operation.
      */
     public WhatsappTemplate createTemplate(
             String accountId,
@@ -132,7 +150,11 @@ public final class WhatsappResource {
                 ApiClient.unwrap(http.post(base(accountId) + "/templates", body)), WhatsappTemplate.class);
     }
 
-    /** Creates a template from one of the platform's library entries. */
+    /**
+     * Creates a template from one of the platform's library entries.
+     *
+     * <p>Wraps the API's {@code importWhatsappTemplate} operation.
+     */
     public WhatsappTemplate importTemplate(
             String accountId,
             String libraryTemplateName,
@@ -153,7 +175,11 @@ public final class WhatsappResource {
                 WhatsappTemplate.class);
     }
 
-    /** Edits a template. The name cannot change; create a new one instead. */
+    /**
+     * Edits a template. The name cannot change; create a new one instead.
+     *
+     * <p>Wraps the API's {@code updateWhatsappTemplate} operation.
+     */
     public WhatsappTemplate updateTemplate(
             String accountId, String templateId, String category, List<Map<String, Object>> components) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -169,7 +195,11 @@ public final class WhatsappResource {
                 WhatsappTemplate.class);
     }
 
-    /** The name is required: it is what the platform deletes by. */
+    /**
+     * The name is required: it is what the platform deletes by.
+     *
+     * <p>Wraps the API's {@code deleteWhatsappTemplate} operation.
+     */
     public void deleteTemplate(String accountId, String templateId, String name) {
         Map<String, Object> query = new LinkedHashMap<>();
         query.put("name", name);
@@ -178,12 +208,17 @@ public final class WhatsappResource {
 
     // ─── Groups ───────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code listWhatsappGroups} operation. */
     public List<WhatsappGroup> listGroups(String accountId) {
         return http.convertList(
                 ApiClient.unwrap(http.get(base(accountId) + "/groups", null)), WhatsappGroup.class);
     }
 
-    /** Participation is invite-only: send the invite link, there is no add. */
+    /**
+     * Participation is invite-only: send the invite link, there is no add.
+     *
+     * <p>Wraps the API's {@code createWhatsappGroup} operation.
+     */
     public WhatsappGroup createGroup(String accountId, String subject, String description) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("subject", subject);
@@ -194,12 +229,14 @@ public final class WhatsappResource {
                 ApiClient.unwrap(http.post(base(accountId) + "/groups", body)), WhatsappGroup.class);
     }
 
+    /** Wraps the API's {@code getWhatsappGroup} operation. */
     public WhatsappGroup getGroup(String accountId, String groupId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/groups/" + groupId, null)),
                 WhatsappGroup.class);
     }
 
+    /** Wraps the API's {@code updateWhatsappGroup} operation. */
     public WhatsappGroup updateGroup(
             String accountId, String groupId, String subject, String description) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -214,6 +251,7 @@ public final class WhatsappResource {
                 WhatsappGroup.class);
     }
 
+    /** Wraps the API's {@code deleteWhatsappGroup} operation. */
     public void deleteGroup(String accountId, String groupId) {
         http.delete(base(accountId) + "/groups/" + groupId);
     }
@@ -242,6 +280,7 @@ public final class WhatsappResource {
 
     // ─── Blocking ─────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code listWhatsappBlocked} operation. */
     public List<String> listBlocked(String accountId, String after) {
         Map<String, Object> query = new LinkedHashMap<>();
         if (after != null) {
@@ -250,6 +289,7 @@ public final class WhatsappResource {
         return http.convertList(ApiClient.unwrap(http.get(base(accountId) + "/block", query)), String.class);
     }
 
+    /** Wraps the API's {@code blockWhatsappUsers} operation. */
     public WhatsappBlockResult blockUsers(String accountId, List<String> users) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("users", users);
@@ -257,6 +297,7 @@ public final class WhatsappResource {
                 ApiClient.unwrap(http.post(base(accountId) + "/block", body)), WhatsappBlockResult.class);
     }
 
+    /** Wraps the API's {@code unblockWhatsappUsers} operation. */
     public WhatsappBlockResult unblockUsers(String accountId, List<String> users) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("users", users);
@@ -267,12 +308,14 @@ public final class WhatsappResource {
 
     // ─── Commerce ─────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code getWhatsappCommerce} operation. */
     public WhatsappCommerceSettings getCommerceSettings(String accountId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/commerce", null)),
                 WhatsappCommerceSettings.class);
     }
 
+    /** Wraps the API's {@code updateWhatsappCommerce} operation. */
     public WhatsappCommerceSettings updateCommerceSettings(
             String accountId, Boolean cartEnabled, Boolean catalogVisible) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -287,7 +330,11 @@ public final class WhatsappResource {
                 WhatsappCommerceSettings.class);
     }
 
-    /** Points the number at a catalog the customer already owns. */
+    /**
+     * Points the number at a catalog the customer already owns.
+     *
+     * <p>Wraps the API's {@code linkWhatsappCatalog} operation.
+     */
     public WhatsappCommerceSettings linkCatalog(String accountId, String catalogId) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("catalog_id", catalogId);
@@ -298,17 +345,23 @@ public final class WhatsappResource {
 
     // ─── Flows ────────────────────────────────────────────────────────────────
 
+    /** Wraps the API's {@code listWhatsappFlows} operation. */
     public List<WhatsappFlow> listFlows(String accountId) {
         return http.convertList(
                 ApiClient.unwrap(http.get(base(accountId) + "/flows", null)), WhatsappFlow.class);
     }
 
+    /** Wraps the API's {@code getWhatsappFlow} operation. */
     public WhatsappFlow getFlow(String accountId, String flowId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/flows/" + flowId, null)), WhatsappFlow.class);
     }
 
-    /** Creates a draft flow; its screens are uploaded separately. */
+    /**
+     * Creates a draft flow; its screens are uploaded separately.
+     *
+     * <p>Wraps the API's {@code createWhatsappFlow} operation.
+     */
     public WhatsappFlow createFlow(String accountId, String name, List<String> categories) {
         return createFlow(accountId, name, categories, null, null);
     }
@@ -328,6 +381,7 @@ public final class WhatsappResource {
                 ApiClient.unwrap(http.post(base(accountId) + "/flows", body)), WhatsappFlow.class);
     }
 
+    /** Wraps the API's {@code updateWhatsappFlow} operation. */
     public WhatsappFlow updateFlow(
             String accountId, String flowId, String name, List<String> categories, String endpointUri) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -345,7 +399,11 @@ public final class WhatsappResource {
                 WhatsappFlow.class);
     }
 
-    /** Drafts only; a published flow is deprecated instead. */
+    /**
+     * Drafts only; a published flow is deprecated instead.
+     *
+     * <p>Wraps the API's {@code deleteWhatsappFlow} operation.
+     */
     public void deleteFlow(String accountId, String flowId) {
         http.delete(base(accountId) + "/flows/" + flowId);
     }
@@ -375,12 +433,14 @@ public final class WhatsappResource {
                 WhatsappFlow.class);
     }
 
+    /** Wraps the API's {@code listWhatsappFlowResponses} operation. */
     public List<WhatsappFlowResponse> listFlowResponses(String accountId) {
         return http.convertList(
                 ApiClient.unwrap(http.get(base(accountId) + "/flows/responses", null)),
                 WhatsappFlowResponse.class);
     }
 
+    /** Wraps the API's {@code getWhatsappEncryptionKey} operation. */
     public WhatsappEncryptionKeyStatus getEncryptionKeyStatus(String accountId) {
         return http.convert(
                 ApiClient.unwrap(http.get(base(accountId) + "/flows/encryption-key", null)),
@@ -390,6 +450,8 @@ public final class WhatsappResource {
     /**
      * Registers the public half of the key the platform encrypts a flow
      * endpoint's payloads with. The private half stays with the customer.
+     *
+     * <p>Wraps the API's {@code setWhatsappEncryptionKey} operation.
      */
     public WhatsappEncryptionKeyStatus setEncryptionKey(String accountId, String businessPublicKey) {
         Map<String, Object> body = new LinkedHashMap<>();
@@ -401,7 +463,11 @@ public final class WhatsappResource {
 
     // ─── Account state and sandbox ────────────────────────────────────────────
 
-    /** The account review state and the number's quality and limit tier. */
+    /**
+     * The account review state and the number's quality and limit tier.
+     *
+     * <p>Wraps the API's {@code getWhatsappAccountEvents} operation.
+     */
     public Map<String, Object> getAccountEvents(String accountId) {
         return http.convert(ApiClient.unwrap(http.get(base(accountId) + "/events", null)), Map.class);
     }
