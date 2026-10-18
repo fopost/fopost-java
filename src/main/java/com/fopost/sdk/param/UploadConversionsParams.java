@@ -7,8 +7,12 @@ import java.util.Map;
 
 /**
  * The body of {@code POST /v1/ads/conversions}: offline events attributed to a
- * pixel the ad account owns. Emails and phone numbers are hashed by the API
- * before anything leaves FoPost.
+ * pixel the ad account owns. Emails, phone numbers and external ids are hashed
+ * by the API before anything leaves FoPost. Per-event fields go through
+ * {@link #with}: {@code eventId}, {@code actionSource}, {@code sourceUrl},
+ * {@code email}, {@code phone}, {@code externalId}, {@code clientIpAddress},
+ * {@code clientUserAgent}, {@code clickId}, {@code browserId}, {@code valueMinor},
+ * {@code currency}, {@code orderId} and {@code contentIds}.
  */
 public final class UploadConversionsParams {
 

@@ -88,7 +88,16 @@ public final class ApiClient {
 
     /** Send a request and return the decoded body, retrying while the API answers 429. */
     public JsonNode request(String method, String path, Object body, Map<String, Object> query) {
+        return request(method, path, body, query, null);
+    }
+
+    /** As above, with extra request headers such as {@code Idempotency-Key}. */
+    public JsonNode request(
+            String method, String path, Object body, Map<String, Object> query, Map<String, String> extraHeaders) {
         Map<String, String> headers = baseHeaders();
+        if (extraHeaders != null) {
+            headers.putAll(extraHeaders);
+        }
         String url = url(path, query);
         HttpRequestData request;
         if (body instanceof Multipart multipart) {
