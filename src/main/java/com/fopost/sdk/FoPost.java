@@ -15,6 +15,7 @@ import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
 import com.fopost.sdk.resource.BlogResource;
 import com.fopost.sdk.resource.BroadcastsResource;
+import com.fopost.sdk.resource.ConnectSessionsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.BlogsResource;
 import com.fopost.sdk.resource.InboxResource;
@@ -71,6 +72,7 @@ public final class FoPost {
     private final QueueResource queue;
     private final AccountsResource accounts;
     private final AccountGroupsResource accountGroups;
+    private final ConnectSessionsResource connectSessions;
     private final WorkspacesResource workspaces;
     private final KnowledgeResource knowledge;
     private final LabelsResource labels;
@@ -99,6 +101,7 @@ public final class FoPost {
         this.googleBusiness = new GoogleBusinessResource(http);
         this.accounts = new AccountsResource(http);
         this.accountGroups = new AccountGroupsResource(http);
+        this.connectSessions = new ConnectSessionsResource(http);
         this.workspaces = new WorkspacesResource(http);
         this.knowledge = new KnowledgeResource(http);
         this.labels = new LabelsResource(http);
@@ -148,6 +151,11 @@ public final class FoPost {
 
     public AccountGroupsResource accountGroups() {
         return accountGroups;
+    }
+
+    /** Hosted links that let your own users connect an account without a FoPost login. */
+    public ConnectSessionsResource connectSessions() {
+        return connectSessions;
     }
 
     public WorkspacesResource workspaces() {
