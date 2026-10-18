@@ -16,6 +16,7 @@ import com.fopost.sdk.resource.AutomationsResource;
 import com.fopost.sdk.resource.BlogResource;
 import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ContactsResource;
+import com.fopost.sdk.resource.BlogsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.KnowledgeResource;
 import com.fopost.sdk.resource.GoogleAdsResource;
@@ -86,6 +87,7 @@ public final class FoPost {
     private final AdsResource ads;
     private final GoogleAdsResource googleAds;
     private final BlogResource blog;
+    private final BlogsResource blogs;
     private final ValidateResource validate;
 
     private FoPost(ApiClient http) {
@@ -111,6 +113,7 @@ public final class FoPost {
         this.ads = new AdsResource(http);
         this.googleAds = new GoogleAdsResource(http);
         this.blog = new BlogResource(http);
+        this.blogs = new BlogsResource(http);
         this.validate = new ValidateResource(http);
     }
 
@@ -184,6 +187,11 @@ public final class FoPost {
     /** Manage a connected Google Business Profile location. */
     public GoogleBusinessResource googleBusiness() {
         return googleBusiness;
+    }
+
+    /** Articles and products that already live on a connected site. */
+    public BlogsResource blogs() {
+        return blogs;
     }
 
     public InboxResource inbox() {
