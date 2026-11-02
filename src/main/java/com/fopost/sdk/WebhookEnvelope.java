@@ -8,14 +8,14 @@ import com.fopost.sdk.internal.Json;
  *
  * <pre>{@code
  * WebhookEnvelope envelope = WebhookVerifier.verify(rawBody, headers, secret);
- * if (WebhookEvents.ARTICLE_PUBLISHED.equals(envelope.event())) {
- *     BlogArticlePublished article = envelope.data(BlogArticlePublished.class);
+ * if (WebhookEvents.POST_PUBLISHED.equals(envelope.event())) {
+ *     String postId = envelope.data().path("id").asText();
  * }
  * }</pre>
  */
 public record WebhookEnvelope(String event, JsonNode data, String timestamp) {
 
-    /** The body as a typed record, such as {@link com.fopost.sdk.model.BlogArticlePublished}. */
+    /** The body as a typed record. */
     public <T> T data(Class<T> type) {
         if (data == null || data.isNull() || data.isMissingNode()) {
             return null;
