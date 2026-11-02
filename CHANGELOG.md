@@ -32,6 +32,13 @@ All notable changes to this project are documented here. The format follows
 - `ads().uploadConversions` returns `ConversionUploadResult` (`id`, `accepted`, `eventCount`,
   `replayed`) instead of the accepted count, and takes an optional `idempotencyKey`.
 
+### Removed
+
+- `blog()` (`BlogResource`) and the retired `/v1/blog/*` endpoints it wrapped (settings,
+  website secret and test, destinations, keywords, articles), with `BlogParams`, every `Blog*`
+  model and constant class, and `WebhookEvents.ARTICLE_PUBLISHED`. Articles are ordinary posts
+  now; `blogs()` (remote articles on a connected site) is unchanged.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added

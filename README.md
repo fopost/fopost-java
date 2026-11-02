@@ -103,7 +103,6 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `accountGroups()` | `list`, `get`, `create`, `update`, `delete`, `setMembers`                                                                                                                                  |
 | `labels()`      | `list`, `get`, `create`, `update`, `delete`                                                                                                                                                  |
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `deliveries`, `delivery`, `redeliver`, `verify`                                                                                                                                       |
-| `blog()`        | `getSettings`, `updateSettings`, `rotateWebsiteSecret`, `testWebsite`, `listKeywords`, `suggestSeeds`, `planKeywords`, `addKeyword`, `updateKeyword`, `deleteKeyword`, `listArticles`, `requestArticle`, `getArticle`, `updateArticle`, `regenerateArticle`, `submitArticle`, `publishArticle`, `rejectArticle`, `deleteArticle` |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`, `versions`, `version`, `restoreVersion`                                                                                                     |
 | `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
@@ -263,53 +262,6 @@ System.out.println(hook.secret());
 client.webhooks().test(hook.id());
 ```
 
-## Blog
-
-A post goes to a social network; an article goes to a website. `blog()` holds the keyword plan,
-the articles the writer produces, and the settings that say where they are published:
-`BlogTargetKind.PRODUCT_BLOG`, a connected `ACCOUNT`, or your own `WEBSITE`, which receives each
-published article as a signed webhook.
-
-Planning starts from the blog's goal. Suggest search terms, research them, then pick the keywords
-worth writing; a picked keyword takes the next free date on the calendar.
-
-```java
-client.blog().updateSettings(
-        workspace.id(),
-        BlogParams.Settings.create().goal(BlogGoal.LEADS).focusTopics("Scheduling for small teams"));
-
-List<String> seeds = client.blog().suggestSeeds(workspace.id(), List.of(), "Beginners, not agencies");
-client.blog().planKeywords(workspace.id(), seeds);
-
-for (BlogKeyword keyword : client.blog().listKeywords(
-        workspace.id(), BlogParams.Filter.create().status(BlogKeywordStatus.SUGGESTED).limit(3))) {
-    client.blog().updateKeyword(
-            workspace.id(), keyword.id(), BlogParams.KeywordUpdate.create().status(BlogKeywordStatus.PLANNED));
-}
-```
-
-Every article is approved before it publishes: submit a draft for review, then publish it or give
-it a `publishAt`.
-
-```java
-BlogArticle article = client.blog().requestArticle(
-        workspace.id(),
-        BlogParams.Article.create()
-                .keyword("how to schedule posts")
-                .instructions("Lead with the calendar view."));
-
-// Poll until the status leaves queued and writing, then read the body.
-BlogArticleFull draft = client.blog().getArticle(workspace.id(), article.id());
-client.blog().submitArticle(workspace.id(), article.id());
-client.blog().publishArticle(workspace.id(), article.id());
-```
-
-Reads, settings, keyword edits and `submitArticle` need `posts`; `suggestSeeds`, `planKeywords`,
-`requestArticle` and `regenerateArticle` spend AI credits and need `ai` (an empty balance is a
-`PaymentRequiredException`); `publishArticle` needs `publish`, answers 409 for a draft that was
-never submitted, and 409 `no_target` until a target is set. Setting `websiteUrl` issues the site's signing secret once, on
-`BlogSettingsUpdate.websiteSecret()`; `rotateWebsiteSecret` issues a new one.
-
 To verify a delivery, hand `WebhookVerifier` the raw request bytes, the headers and the secret.
 It prefers the timestamped signature, refuses one more than 300 seconds old, and falls back to
 the body-only signature when no timestamp header is present. The same call is on
@@ -319,15 +271,13 @@ the body-only signature when no timestamp header is present. The same call is on
 byte[] rawBody = request.getInputStream().readAllBytes();
 WebhookEnvelope envelope = WebhookVerifier.verify(rawBody, headers, System.getenv("FOPOST_WEBHOOK_SECRET"));
 
-if (WebhookEvents.ARTICLE_PUBLISHED.equals(envelope.event())) {
-    BlogArticlePublished published = envelope.data(BlogArticlePublished.class);
-    store(published.slug(), published.bodyHtml());
+if (WebhookEvents.POST_PUBLISHED.equals(envelope.event())) {
+    String postId = envelope.data().path("id").asText();
 }
 ```
 
 A failed check is a `FoPostException` with code `missing_signature`, `invalid_signature`,
-`stale_timestamp` or `invalid_payload`. Image URLs in the payload are fetchable for six hours;
-download and store your own copy.
+`stale_timestamp` or `invalid_payload`.
 
 ## AI features
 

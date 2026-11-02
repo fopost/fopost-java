@@ -3,7 +3,6 @@ package com.fopost.sdk;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.fopost.sdk.model.BlogArticlePublished;
 import com.fopost.sdk.model.WebhookEvents;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -20,14 +19,8 @@ class WebhookVerifierTest {
 
     private static final String BODY =
             """
-            {"event":"article.published","timestamp":"2026-10-11T09:00:00.000Z",
-             "data":{"id":"art_1","title":"How to schedule posts","slug":"how-to-schedule-posts",
-                     "excerpt":null,"metaTitle":null,"metaDescription":null,
-                     "bodyMarkdown":"# Hi","bodyHtml":"<h1>Hi</h1>",
-                     "featuredImage":{"mediaId":"m_1","url":"https://cdn.example/f.png","alt":"Calendar"},
-                     "images":[],"tags":["scheduling"],"keyword":"how to schedule posts",
-                     "wordCount":2,"publishedAt":"2026-10-11T09:00:00.000Z",
-                     "publishedUrl":"https://yourbrand.com/blog/how-to-schedule-posts"}}""";
+            {"event":"post.published","timestamp":"2026-10-11T09:00:00.000Z",
+             "data":{"id":"post_1","status":"published","title":"How to schedule posts"}}""";
 
     private static byte[] bytes(String body) {
         return body.getBytes(StandardCharsets.UTF_8);
@@ -41,16 +34,12 @@ class WebhookVerifierTest {
     }
 
     @Test
-    void aFreshTimestampedSignaturePassesAndParsesTheArticle() {
+    void aFreshTimestampedSignaturePassesAndParsesTheEnvelope() {
         WebhookEnvelope envelope = WebhookVerifier.verify(bytes(BODY), timestamped(BODY, NOW - 10), SECRET, CLOCK);
 
-        assertEquals(WebhookEvents.ARTICLE_PUBLISHED, envelope.event());
+        assertEquals(WebhookEvents.POST_PUBLISHED, envelope.event());
         assertEquals("2026-10-11T09:00:00.000Z", envelope.timestamp());
-        BlogArticlePublished article = envelope.data(BlogArticlePublished.class);
-        assertEquals("how-to-schedule-posts", article.slug());
-        assertEquals("Calendar", article.featuredImage().alt());
-        assertEquals("https://yourbrand.com/blog/how-to-schedule-posts", article.publishedUrl());
-        assertEquals(Instant.parse("2026-10-11T09:00:00Z"), article.publishedAt());
+        assertEquals("post_1", envelope.data().path("id").asText());
     }
 
     @Test
@@ -78,7 +67,7 @@ class WebhookVerifierTest {
         Map<String, String> legacy = Map.of("X-FoPost-Signature", WebhookVerifier.sign(bytes(BODY), SECRET));
 
         WebhookEnvelope envelope = WebhookVerifier.verify(BODY, legacy, SECRET);
-        assertEquals(WebhookEvents.ARTICLE_PUBLISHED, envelope.event());
+        assertEquals(WebhookEvents.POST_PUBLISHED, envelope.event());
 
         FoPostException error = assertThrows(
                 FoPostException.class,

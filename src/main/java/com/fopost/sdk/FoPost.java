@@ -13,7 +13,6 @@ import com.fopost.sdk.resource.ActivityResource;
 import com.fopost.sdk.resource.AiResource;
 import com.fopost.sdk.resource.AnalyticsResource;
 import com.fopost.sdk.resource.AutomationsResource;
-import com.fopost.sdk.resource.BlogResource;
 import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ConnectSessionsResource;
 import com.fopost.sdk.resource.ContactsResource;
@@ -92,7 +91,6 @@ public final class FoPost {
     private final InboxResource inbox;
     private final AdsResource ads;
     private final GoogleAdsResource googleAds;
-    private final BlogResource blog;
     private final BlogsResource blogs;
     private final ValidateResource validate;
 
@@ -121,7 +119,6 @@ public final class FoPost {
         this.sequences = new SequencesResource(http);
         this.ads = new AdsResource(http);
         this.googleAds = new GoogleAdsResource(http);
-        this.blog = new BlogResource(http);
         this.blogs = new BlogsResource(http);
         this.validate = new ValidateResource(http);
     }
@@ -250,14 +247,6 @@ public final class FoPost {
      */
     public GoogleAdsResource googleAds() {
         return googleAds;
-    }
-
-    /**
-     * Articles for a website: the keyword plan, the drafts the writer produces, and where they
-     * are published. A post goes to a social network; an article goes to a website.
-     */
-    public BlogResource blog() {
-        return blog;
     }
 
     public ValidateResource validate() {
