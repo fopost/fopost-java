@@ -300,10 +300,14 @@ Comments, mentions and direct messages across the connected accounts, with the s
 (`unread`, `read`, `resolved`, `snoozed`). Lists are pages with `page`, `perPage` and `total`.
 
 ```java
-InboxPage<InboxItem> unread = client.inbox().list(
-        InboxListParams.create().workspaceId(workspace.id()).state("unread"));
+InboxPage<InboxItem> unanswered = client.inbox().list(
+        InboxListParams.create()
+                .workspaceId(workspace.id())
+                .accountId(instagramId, facebookId)
+                .status("unanswered")
+                .since(Instant.parse("2026-09-01T00:00:00Z")));
 
-for (InboxItem item : unread) {
+for (InboxItem item : unanswered) {
     if (Boolean.TRUE.equals(item.canReply())) {
         client.inbox().reply(item.id(), "Thanks for asking, sent you a DM.");
     }
@@ -311,7 +315,15 @@ for (InboxItem item : unread) {
 
 client.inbox().markThreadRead(workspace.id(), accountId, postExternalId);
 client.inbox().update(itemId, "snoozed", Instant.parse("2026-09-02T09:00:00Z"));
+
+// Resolve every unanswered comment older than a week, without replying.
+int resolved = client.inbox().resolve(InboxResolveParams.of(workspace.id(), "comment")
+        .before(Instant.now().minus(Duration.ofDays(7))));
 ```
+
+`status` is `unanswered`, `replied` or `resolved` (a reply also resolves an item), `since` keeps
+items the platform dates at or after an instant, `accountId` takes one or more accounts, and
+`sort` is `newest` or `oldest`. The same filters apply to `threads` and `conversations`.
 
 `threads` groups comments per platform post (`kind("mentions")` for posts the account was tagged
 in) and `conversations` per DM thread. `listApprovals` returns replies an automation or the agent

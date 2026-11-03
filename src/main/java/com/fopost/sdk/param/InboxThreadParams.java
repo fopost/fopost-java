@@ -1,6 +1,10 @@
 package com.fopost.sdk.param;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Filters for listing comment threads and DM conversations. Every field is optional. */
@@ -26,28 +30,41 @@ public final class InboxThreadParams {
         return this;
     }
 
-    public InboxThreadParams platform(String platform) {
-        query.put("platform", platform);
+    /** One or more connected accounts; sent comma-separated. */
+    public InboxThreadParams accountId(String... accountIds) {
+        return accountIds(accountIds == null ? null : Arrays.asList(accountIds));
+    }
+
+    public InboxThreadParams accountIds(List<String> accountIds) {
+        List<String> ids = new ArrayList<>();
+        if (accountIds != null) {
+            for (String id : accountIds) {
+                if (id != null && !id.isEmpty()) {
+                    ids.add(id);
+                }
+            }
+        }
+        if (ids.isEmpty()) {
+            query.remove("account_id");
+        } else {
+            query.put("account_id", String.join(",", ids));
+        }
         return this;
     }
 
-    public InboxThreadParams accountId(String accountId) {
-        query.put("account_id", accountId);
+    /** {@code unanswered}, {@code replied} or {@code resolved}. A reply also resolves an item. */
+    public InboxThreadParams status(String status) {
+        query.put("status", status);
         return this;
     }
 
-    /** {@code unread}, {@code read}, {@code resolved} or {@code snoozed}. */
-    public InboxThreadParams state(String state) {
-        query.put("state", state);
+    /** Only items the platform dates at or after this instant. */
+    public InboxThreadParams since(Instant since) {
+        Params.put(query, "since", Params.iso(since));
         return this;
     }
 
-    public InboxThreadParams q(String q) {
-        query.put("q", q);
-        return this;
-    }
-
-    /** {@code newest}, {@code oldest} or {@code unanswered}. */
+    /** {@code newest} or {@code oldest}. */
     public InboxThreadParams sort(String sort) {
         query.put("sort", sort);
         return this;

@@ -19,6 +19,7 @@ import com.fopost.sdk.model.InboxReplyResult;
 import com.fopost.sdk.model.InboxThread;
 import com.fopost.sdk.param.InboxListParams;
 import com.fopost.sdk.param.InboxReplyParams;
+import com.fopost.sdk.param.InboxResolveParams;
 import com.fopost.sdk.param.InboxThreadParams;
 import com.fopost.sdk.param.StartConversationParams;
 import java.time.Instant;
@@ -30,9 +31,9 @@ import java.util.Map;
  * Comments, mentions, reviews and direct messages on the connected accounts.
  *
  * <pre>{@code
- * InboxPage<InboxItem> unread = client.inbox().list(
- *         InboxListParams.create().workspaceId(workspaceId).state("unread"));
- * for (InboxItem item : unread) {
+ * InboxPage<InboxItem> unanswered = client.inbox().list(
+ *         InboxListParams.create().workspaceId(workspaceId).status("unanswered"));
+ * for (InboxItem item : unanswered) {
  *     if (Boolean.TRUE.equals(item.canReply())) {
  *         client.inbox().reply(item.id(), "Thanks for asking, sent you a DM.");
  *     }
@@ -136,6 +137,14 @@ public final class InboxResource {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("workspace_id", workspaceId);
         return http.convert(ApiClient.unwrap(http.post("/v1/inbox/refresh", body)), InboxRefreshResult.class);
+    }
+
+    /**
+     * Resolve every unanswered item of one type in bulk. Nothing reaches a platform. Returns how
+     * many items changed.
+     */
+    public int resolve(InboxResolveParams params) {
+        return ApiClient.unwrap(http.post("/v1/inbox/resolve", params.toMap())).path("resolved").asInt(0);
     }
 
     /** {@code state} is unread, read or resolved. Snoozing needs {@link #update(String, String, Instant)}. */
