@@ -13,6 +13,7 @@ import com.fopost.sdk.model.InboxRefreshResult;
 import com.fopost.sdk.model.InboxReplyResult;
 import com.fopost.sdk.param.InboxListParams;
 import com.fopost.sdk.param.InboxReplyParams;
+import com.fopost.sdk.param.InboxResolveParams;
 import com.fopost.sdk.param.InboxThreadParams;
 import com.fopost.sdk.param.StartConversationParams;
 import java.time.Instant;
@@ -75,6 +76,25 @@ class InboxTest {
         assertEquals(
                 "https://api.fopost.test/v1/inbox/posts?kind=reviews&account_id=a1&status=replied&sort=oldest",
                 transport.last().url());
+    }
+
+    @Test
+    void resolvePostsTheTypeAccountsAndCutoff() {
+        FakeTransport transport = new FakeTransport().enqueue(200, "{\"data\":{\"resolved\":4}}");
+
+        int resolved = TestSupport.client(transport)
+                .inbox()
+                .resolve(InboxResolveParams.of("w1", "comment")
+                        .accountId("a1", "a2")
+                        .before(Instant.parse("2026-09-01T00:00:00Z")));
+
+        assertEquals("POST", transport.last().method());
+        assertEquals("https://api.fopost.test/v1/inbox/resolve", transport.last().url());
+        assertEquals(
+                "{\"workspace_id\":\"w1\",\"type\":\"comment\",\"account_id\":[\"a1\",\"a2\"],"
+                        + "\"before\":\"2026-09-01T00:00:00Z\"}",
+                transport.lastBody());
+        assertEquals(4, resolved);
     }
 
     @Test

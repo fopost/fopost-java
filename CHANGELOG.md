@@ -26,6 +26,9 @@ All notable changes to this project are documented here. The format follows
   `CustomConversionRule`.
 - `UploadConversionsParams` events accept `eventId`, `actionSource`, `sourceUrl`, `externalId`,
   `clientIpAddress`, `clientUserAgent`, `clickId`, `browserId` and `contentIds` through `with`.
+- `inbox().resolve(InboxResolveParams)` resolves every unanswered item of one type in bulk,
+  optionally only on some accounts (`accountId`) or only items dated `before` an instant, and
+  returns how many changed. Nothing reaches a platform. Needs `inbox`.
 - `InboxListParams` and `InboxThreadParams` take `status` (`unanswered`, `replied`, `resolved`)
   and `since`, and `accountId` takes one or more ids (or `accountIds(List)`), sent comma-separated.
 

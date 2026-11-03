@@ -315,6 +315,10 @@ for (InboxItem item : unanswered) {
 
 client.inbox().markThreadRead(workspace.id(), accountId, postExternalId);
 client.inbox().update(itemId, "snoozed", Instant.parse("2026-09-02T09:00:00Z"));
+
+// Resolve every unanswered comment older than a week, without replying.
+int resolved = client.inbox().resolve(InboxResolveParams.of(workspace.id(), "comment")
+        .before(Instant.now().minus(Duration.ofDays(7))));
 ```
 
 `status` is `unanswered`, `replied` or `resolved` (a reply also resolves an item), `since` keeps
