@@ -1,6 +1,10 @@
 package com.fopost.sdk.param;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /** Filters for listing inbox items. Every field is optional. */
@@ -18,25 +22,43 @@ public final class InboxListParams {
         return this;
     }
 
-    /** {@code comment}, {@code mention} or {@code dm}. */
+    /** {@code comment}, {@code mention}, {@code review} or {@code dm}. */
     public InboxListParams type(String type) {
         query.put("type", type);
         return this;
     }
 
-    /** {@code unread}, {@code read}, {@code resolved} or {@code snoozed}. */
-    public InboxListParams state(String state) {
-        query.put("state", state);
+    /** One or more connected accounts; sent comma-separated. */
+    public InboxListParams accountId(String... accountIds) {
+        return accountIds(accountIds == null ? null : Arrays.asList(accountIds));
+    }
+
+    public InboxListParams accountIds(List<String> accountIds) {
+        List<String> ids = new ArrayList<>();
+        if (accountIds != null) {
+            for (String id : accountIds) {
+                if (id != null && !id.isEmpty()) {
+                    ids.add(id);
+                }
+            }
+        }
+        if (ids.isEmpty()) {
+            query.remove("account_id");
+        } else {
+            query.put("account_id", String.join(",", ids));
+        }
         return this;
     }
 
-    public InboxListParams platform(String platform) {
-        query.put("platform", platform);
+    /** {@code unanswered}, {@code replied} or {@code resolved}. A reply also resolves an item. */
+    public InboxListParams status(String status) {
+        query.put("status", status);
         return this;
     }
 
-    public InboxListParams accountId(String accountId) {
-        query.put("account_id", accountId);
+    /** Only items the platform dates at or after this instant. */
+    public InboxListParams since(Instant since) {
+        Params.put(query, "since", Params.iso(since));
         return this;
     }
 
@@ -64,12 +86,7 @@ public final class InboxListParams {
         return this;
     }
 
-    public InboxListParams q(String q) {
-        query.put("q", q);
-        return this;
-    }
-
-    /** {@code newest}, {@code oldest} or {@code unanswered}. */
+    /** {@code newest} or {@code oldest}. */
     public InboxListParams sort(String sort) {
         query.put("sort", sort);
         return this;

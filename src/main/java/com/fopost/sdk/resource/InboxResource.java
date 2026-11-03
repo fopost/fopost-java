@@ -30,9 +30,9 @@ import java.util.Map;
  * Comments, mentions, reviews and direct messages on the connected accounts.
  *
  * <pre>{@code
- * InboxPage<InboxItem> unread = client.inbox().list(
- *         InboxListParams.create().workspaceId(workspaceId).state("unread"));
- * for (InboxItem item : unread) {
+ * InboxPage<InboxItem> unanswered = client.inbox().list(
+ *         InboxListParams.create().workspaceId(workspaceId).status("unanswered"));
+ * for (InboxItem item : unanswered) {
  *     if (Boolean.TRUE.equals(item.canReply())) {
  *         client.inbox().reply(item.id(), "Thanks for asking, sent you a DM.");
  *     }

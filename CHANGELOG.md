@@ -26,6 +26,8 @@ All notable changes to this project are documented here. The format follows
   `CustomConversionRule`.
 - `UploadConversionsParams` events accept `eventId`, `actionSource`, `sourceUrl`, `externalId`,
   `clientIpAddress`, `clientUserAgent`, `clickId`, `browserId` and `contentIds` through `with`.
+- `InboxListParams` and `InboxThreadParams` take `status` (`unanswered`, `replied`, `resolved`)
+  and `since`, and `accountId` takes one or more ids (or `accountIds(List)`), sent comma-separated.
 
 ### Changed
 
@@ -34,6 +36,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Removed
 
+- `InboxListParams` and `InboxThreadParams` drop `state`, `platform` and `q`, and `sort` no longer
+  takes `unanswered`; the inbox list endpoints no longer read them. Filter by `status` and
+  `accountId` instead.
 - `blog()` (`BlogResource`) and the retired `/v1/blog/*` endpoints it wrapped (settings,
   website secret and test, destinations, keywords, articles), with `BlogParams`, every `Blog*`
   model and constant class, and `WebhookEvents.ARTICLE_PUBLISHED`. Articles are ordinary posts
