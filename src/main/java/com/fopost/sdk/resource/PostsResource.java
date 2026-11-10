@@ -271,22 +271,40 @@ public final class PostsResource {
 
     /** Check a CSV without creating anything. Every row comes back with its errors, if any. */
     public BulkImportValidation validateImport(Path csv, String workspaceId) {
-        return validateImport(csv.getFileName().toString(), read(csv), workspaceId);
+        return validateImport(csv, workspaceId, null);
+    }
+
+    /** {@code accounts} (ids or platform names) applies to rows whose own accounts cell is empty. */
+    public BulkImportValidation validateImport(Path csv, String workspaceId, List<String> accounts) {
+        return validateImport(csv.getFileName().toString(), read(csv), workspaceId, accounts);
     }
 
     public BulkImportValidation validateImport(String filename, byte[] csv, String workspaceId) {
-        Multipart body = csvUpload(filename, csv, workspaceId);
+        return validateImport(filename, csv, workspaceId, null);
+    }
+
+    public BulkImportValidation validateImport(String filename, byte[] csv, String workspaceId, List<String> accounts) {
+        Multipart body = csvUpload(filename, csv, workspaceId, accounts);
         return http.convert(http.request("POST", "/v1/posts/bulk-import/validate", body, null),
                 BulkImportValidation.class);
     }
 
     /** Create every valid row. Keep the returned batch id to roll the import back. */
     public BulkImportResult commitImport(Path csv, String workspaceId) {
-        return commitImport(csv.getFileName().toString(), read(csv), workspaceId);
+        return commitImport(csv, workspaceId, null);
+    }
+
+    /** {@code accounts} (ids or platform names) applies to rows whose own accounts cell is empty. */
+    public BulkImportResult commitImport(Path csv, String workspaceId, List<String> accounts) {
+        return commitImport(csv.getFileName().toString(), read(csv), workspaceId, accounts);
     }
 
     public BulkImportResult commitImport(String filename, byte[] csv, String workspaceId) {
-        Multipart body = csvUpload(filename, csv, workspaceId);
+        return commitImport(filename, csv, workspaceId, null);
+    }
+
+    public BulkImportResult commitImport(String filename, byte[] csv, String workspaceId, List<String> accounts) {
+        Multipart body = csvUpload(filename, csv, workspaceId, accounts);
         return http.convert(http.request("POST", "/v1/posts/bulk-import/commit", body, null), BulkImportResult.class);
     }
 
@@ -401,8 +419,14 @@ public final class PostsResource {
         }
     }
 
-    private static Multipart csvUpload(String filename, byte[] csv, String workspaceId) {
-        return new Multipart().file("file", filename, "text/csv", csv).field("workspace_id", workspaceId);
+    private static Multipart csvUpload(String filename, byte[] csv, String workspaceId, List<String> accounts) {
+        Multipart multipart = new Multipart()
+                .file("file", filename, "text/csv", csv)
+                .field("workspace_id", workspaceId);
+        if (accounts != null && !accounts.isEmpty()) {
+            multipart.field("accounts", String.join(",", accounts));
+        }
+        return multipart;
     }
 
     private static byte[] read(Path path) {

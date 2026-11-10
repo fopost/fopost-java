@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `posts().validateImport` and `posts().commitImport` gain overloads taking a `List<String>`
+  of account ids or platform names, sent comma-separated and applied to every CSV row whose
+  own `accounts` cell is empty.
 - `inbox().repost`, `unrepost`, `bookmark` and `unbookmark` for X items, with `reposted`,
   `bookmarked`, `canRepost` and `canBookmark` on `InboxItem`. Need `inbox` and `publish`.
 - `accounts().followXUser(accountId, userId)` and `unfollowXUser` (`XFollowResult`), and the X

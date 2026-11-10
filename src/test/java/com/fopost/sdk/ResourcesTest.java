@@ -107,6 +107,21 @@ class ResourcesTest {
     }
 
     @Test
+    void bulkImportSendsDefaultAccountsOnlyWhenGiven() {
+        FakeTransport transport = new FakeTransport()
+                .enqueue(200, "{\"total_rows\":1,\"valid_rows\":1,\"invalid_rows\":0,\"rows\":[]}")
+                .enqueue(201, "{\"batch_id\":\"b1\",\"created\":1,\"posts\":[]}");
+        FoPost client = TestSupport.client(transport);
+        byte[] csv = "content\nHi\n".getBytes();
+
+        client.posts().validateImport("posts.csv", csv, "w1");
+        assertFalse(transport.lastBody().contains("name=\"accounts\""));
+
+        client.posts().commitImport("posts.csv", csv, "w1", List.of("twitter", "linkedin"));
+        assertTrue(transport.lastBody().contains("name=\"accounts\"\r\n\r\ntwitter,linkedin"));
+    }
+
+    @Test
     void mediaUploadDirectPresignsPutsAndCompletes() {
         FakeTransport transport = new FakeTransport()
                 .enqueue(201, """
