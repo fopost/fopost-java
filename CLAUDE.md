@@ -11,7 +11,7 @@ exception per error status.
 
 - **Java 17** (`maven.compiler.release`), built with Maven, packaged as a jar with attached
   sources and javadoc.
-- Runtime dependencies: `jackson-databind` and `jackson-datatype-jsr310` (2.18.2). HTTP is the
+- Runtime dependencies: `jackson-databind` and `jackson-datatype-jsr310` (2.18.11). HTTP is the
   JDK's own `java.net.http.HttpClient` — no HTTP library dependency.
 - Version `0.4.0` in `pom.xml`, mirrored by the constant in
   `src/main/java/com/fopost/sdk/internal/Version.java` (the release workflow enforces the match).
