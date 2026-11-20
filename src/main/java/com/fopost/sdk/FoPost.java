@@ -17,6 +17,7 @@ import com.fopost.sdk.resource.BroadcastsResource;
 import com.fopost.sdk.resource.ConnectSessionsResource;
 import com.fopost.sdk.resource.ContactsResource;
 import com.fopost.sdk.resource.DesignsResource;
+import com.fopost.sdk.resource.FontsResource;
 import com.fopost.sdk.resource.BlogsResource;
 import com.fopost.sdk.resource.InboxResource;
 import com.fopost.sdk.resource.KnowledgeResource;
@@ -82,6 +83,7 @@ public final class FoPost {
     private final AutomationsResource automations;
     private final MediaResource media;
     private final DesignsResource designs;
+    private final FontsResource fonts;
     private final AiResource ai;
     private final ContactsResource contacts;
     private final BroadcastsResource broadcasts;
@@ -114,6 +116,7 @@ public final class FoPost {
         this.automations = new AutomationsResource(http);
         this.media = new MediaResource(http);
         this.designs = new DesignsResource(http);
+        this.fonts = new FontsResource(http);
         this.ai = new AiResource(http);
         this.whatsapp = new WhatsappResource(http);
         this.inbox = new InboxResource(http);
@@ -198,6 +201,11 @@ public final class FoPost {
     /** Designs from the create suite: versions, exports, bulk and text-to-slides. */
     public DesignsResource designs() {
         return designs;
+    }
+
+    /** The font library and the workspace's uploaded fonts. */
+    public FontsResource fonts() {
+        return fonts;
     }
 
     public ActivityResource activity() {
