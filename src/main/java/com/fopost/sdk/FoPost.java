@@ -30,6 +30,7 @@ import com.fopost.sdk.resource.PostsResource;
 import com.fopost.sdk.resource.QueueResource;
 import com.fopost.sdk.resource.SequencesResource;
 import com.fopost.sdk.resource.ValidateResource;
+import com.fopost.sdk.resource.VideoEditsResource;
 import com.fopost.sdk.resource.WebhooksResource;
 import com.fopost.sdk.resource.WhatsappResource;
 import com.fopost.sdk.resource.WorkspacesResource;
@@ -84,6 +85,7 @@ public final class FoPost {
     private final MediaResource media;
     private final DesignsResource designs;
     private final FontsResource fonts;
+    private final VideoEditsResource videoEdits;
     private final AiResource ai;
     private final ContactsResource contacts;
     private final BroadcastsResource broadcasts;
@@ -117,6 +119,7 @@ public final class FoPost {
         this.media = new MediaResource(http);
         this.designs = new DesignsResource(http);
         this.fonts = new FontsResource(http);
+        this.videoEdits = new VideoEditsResource(http);
         this.ai = new AiResource(http);
         this.whatsapp = new WhatsappResource(http);
         this.inbox = new InboxResource(http);
@@ -206,6 +209,11 @@ public final class FoPost {
     /** The font library and the workspace's uploaded fonts. */
     public FontsResource fonts() {
         return fonts;
+    }
+
+    /** Video edit jobs over videos in the media library. */
+    public VideoEditsResource videoEdits() {
+        return videoEdits;
     }
 
     public ActivityResource activity() {
