@@ -82,7 +82,7 @@ calls `ApiClient.unwrap(...)` and `convert(...)`/`convertList(...)` into a recor
 - `FoPost` instances are immutable and safe to share across threads.
 
 **Resources wired today:** `posts`, `accounts` (with `accounts().communities()`), `workspaces`,
-`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `googleAds`, `validate`. This is
+`labels`, `webhooks`, `analytics`, `automations`, `media`, `ai`, `inbox`, `contacts`, `broadcasts`, `sequences`, `ads`, `googleAds`, `validate`, `designs`, `fonts`, `videoEdits`. This is
 the most complete of the FoPost SDKs — do not narrow it. `FoPost.request(...)` is the escape hatch for
 anything unwrapped.
 
