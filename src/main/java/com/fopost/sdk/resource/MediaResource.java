@@ -2,6 +2,7 @@ package com.fopost.sdk.resource;
 
 import com.fopost.sdk.internal.ApiClient;
 import com.fopost.sdk.internal.Multipart;
+import com.fopost.sdk.model.AltText;
 import com.fopost.sdk.model.MediaLibraryItem;
 import com.fopost.sdk.model.PresignedUpload;
 import com.fopost.sdk.model.UploadLimits;
@@ -91,6 +92,17 @@ public final class MediaResource {
         PresignedUpload presigned = presign(params);
         http.sendRaw(presigned.method(), presigned.uploadUrl(), presigned.headers(), file.source(), file.size());
         return complete(presigned.uploadId());
+    }
+
+    /**
+     * Writes alt text for one image in the library and saves it on the item. Spends AI, so it needs
+     * the {@code ai} scope; an empty balance answers {@code 402}, and a file that is not an image
+     * answers {@code 400}.
+     */
+    public AltText generateAltText(String mediaId) {
+        return http.convert(
+                ApiClient.unwrap(http.post("/v1/media/" + mediaId + "/alt-text", new LinkedHashMap<String, Object>())),
+                AltText.class);
     }
 
     /** Removes the file from the library. Posts already published keep the copy on the platform. */
