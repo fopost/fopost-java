@@ -105,7 +105,7 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `webhooks()`    | `list`, `create`, `update`, `delete`, `test`, `deliveries`, `delivery`, `redeliver`, `verify`                                                                                                                                       |
 | `analytics()`   | `overview`, `timeSeries`, `topPosts`, `labels`, `postsTable`, `postingStreak`, `demographics`, `collect`, `decay`, `frequency`, `timeline`, `changes`, `collectPost`, `nativePosts`, `inbox`          |
 | `automations()` | `list`, `get`, `create`, `update`, `delete`, `toggle`, `runs`, `run`, `trigger`, `stats`, `versions`, `version`, `restoreVersion`                                                                                                     |
-| `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `delete`                                                                                                                          |
+| `media()`       | `list`, `limits`, `upload`, `presign`, `complete`, `uploadDirect`, `generateAltText`, `delete`                                                                                                                          |
 | `ai()`          | `credits`, `generateCaption`, `rewrite`, `repurposeUrl`                                                                                                                                      |
 | `inbox()`       | `list`, `threads`, `conversations`, `unreadCount`, `accounts`, `platforms`, `markThreadRead`, `markConversationRead`, `refresh`, `update`, `editComment`, `reply`, `hide`, `unhide`, `delete`, `like`, `unlike`, `repost`, `unrepost`, `bookmark`, `unbookmark`, `vote`, `pin`, `unpin`, `react`, `startConversation`, `setTyping`, `passThreadControl`, `takeThreadControl`, `handover`, `listApprovals`, `approveReply`, `rejectReply` |
 | `contacts()`    | `list`, `get`, `create`, `update`, `delete`, `conversations`, `importCsv`, `listFields`, `createField`, `updateField`, `updateFieldOptions`, `deleteField`, `conversationAnalytics` |
@@ -121,6 +121,9 @@ long failed = client.posts().stream(PostListParams.create().workspaceId(workspac
 | `googleBusiness()` | `getLocation`, `updateLocation`, `getAttributes`, `updateAttributes`, `getMenus`, `replaceMenus`, `getServices`, `replaceServices`, `listMedia`, `addMedia`, `deleteMedia`, `listPlaceActions`, `createPlaceAction`, `updatePlaceAction`, `deletePlaceAction`, `getVerificationOptions`, `startVerification`, `completeVerification`, `getPerformance`, `getSearchKeywords`, `assign` |
 | `blogs()`       | `listBlogs`, `listArticles`, `getArticle`, `createArticle`, `updateArticle`, `deleteArticle`, `listProducts`, `updateProduct`                                                                |
 | `validate()`    | `post`, `length`, `media`, `subreddit`                                                                                                                                                                |
+| `designs()`     | `list`, `create`, `get`, `update`, `delete`, `versions`, `restoreVersion`, `duplicate`, `export`, `bulk`, `posts`, `textToSlides`, `fromPost` |
+| `fonts()`       | `list`, `upload`, `delete` |
+| `videoEdits()`  | `ops`, `list`, `create`, `get` |
 | `queue()`       | `listSlots`, `createSlot`, `updateSlot`, `deleteSlot`, `next`, `preview` |
 | `connectSessions()` | `create`, `get` |
 | `logs()`        | `list` |
@@ -247,6 +250,53 @@ The SDK picks the route. When every file fits the multipart ceiling it sends one
 files under `files` (at most five). Otherwise it uploads each file directly, then sends the usual
 JSON request with the results attached as media items. An update without new content reads the
 post first and appends to what its first block already holds.
+
+## Designs and video
+
+`designs()` holds the create suite's designs. The design document is a plain
+`Map<String, Object>` sent and returned unchanged, keys and nulls included:
+
+```java
+Design design = client.designs().create(
+        DesignParams.Create.of(workspace.id(), "post", document).name("Launch card"));
+
+DesignSaved saved = client.designs().update(design.id(),
+        DesignParams.Update.create().document(edited).createVersion(true));
+
+// Each file lands in the media library, ready to attach to a post.
+DesignExport export = client.designs().export(design.id(), DesignParams.Export.of("png"));
+String mediaId = export.files().get(0).mediaId();
+
+// One design per row, filling text and image layers by layer id or name.
+List<Design> cards = client.designs().bulk(design.id(),
+        List.of(Map.of("headline", "Spring sale"), Map.of("headline", "Summer sale")), "headline");
+```
+
+`fonts()` lists the font library and the workspace's uploaded fonts, and uploads one TTF, OTF,
+WOFF or WOFF2 file of up to 5 MB:
+
+```java
+UploadedFont font = client.fonts().upload(workspace.id(),
+        FileInput.of(Path.of("BrandSans-Bold.woff2")), "Brand Sans", 700, "normal");
+```
+
+`videoEdits()` runs steps such as `trim`, `subtitles` or `reframe` over a library video as a
+background job. `ops()` lists every step and whether it can run; a job comes back `queued`, so
+read it again with `get` until it is `succeeded` or `failed`:
+
+```java
+VideoEdit job = client.videoEdits().create(mediaId, List.of(
+        VideoEditOperation.of("trim", Map.of("startSec", 2, "endSec", 12)),
+        VideoEditOperation.of("reframe", Map.of("aspect", "9:16"))));
+
+job = client.videoEdits().get(job.id());
+```
+
+`media().generateAltText(mediaId)` writes alt text for one image and saves it on the item.
+
+All of these need the `posts` scope and create access on the workspace. `textToSlides`,
+`generateAltText` and any video step whose `usesAi()` is true spend AI, so they also need `ai`; an
+empty balance answers `402`.
 
 ## Webhooks
 

@@ -8,6 +8,17 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `designs()` (`DesignsResource`) for the create suite: `list`, `create`, `get`, `update`,
+  `delete`, `versions`, `restoreVersion`, `duplicate`, `export`, `bulk`, `posts`, `textToSlides`
+  and `fromPost`, with `DesignParams` and the `Design`, `DesignVersion`, `DesignSaved`,
+  `DesignDeleted`, `DesignExport`, `DesignPost` and `TextSlides` records. The design document is
+  a `Map<String, Object>` passed through unchanged. `textToSlides` also needs `ai`.
+- `fonts()` (`FontsResource`): `list`, `upload` from a `Path`, bytes or a `FileInput`, and
+  `delete`, with `FontList`, `LibraryFont` and `UploadedFont`.
+- `videoEdits()` (`VideoEditsResource`): `ops`, `list`, `create` and `get`, with `VideoEdit`,
+  `VideoEditOp` and `VideoEditOperation`. A step that uses AI also needs `ai`.
+- `media().generateAltText(mediaId)` (`AltText`) writes and saves alt text for one image. Needs
+  `ai`.
 - `posts().validateImport` and `posts().commitImport` gain overloads taking a `List<String>`
   of account ids or platform names, sent comma-separated and applied to every CSV row whose
   own `accounts` cell is empty.
