@@ -2,6 +2,7 @@ package com.fopost.sdk.internal;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -20,6 +21,13 @@ public final class Json {
     private Json() {}
 
     public static final ObjectMapper MAPPER = create();
+
+    private static final ObjectMapper VERBATIM = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    /** A caller-shaped payload as a tree, keys and nulls exactly as given. */
+    public static JsonNode verbatim(Object value) {
+        return VERBATIM.valueToTree(value);
+    }
 
     private static ObjectMapper create() {
         ObjectMapper mapper = new ObjectMapper();
