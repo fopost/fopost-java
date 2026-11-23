@@ -5,42 +5,25 @@ import com.fopost.sdk.model.Ad;
 import com.fopost.sdk.model.AdActivity;
 import com.fopost.sdk.model.AdLabel;
 import com.fopost.sdk.model.AdStudy;
-import com.fopost.sdk.model.CatalogBatchResult;
-import com.fopost.sdk.model.CatalogProductsPage;
 import com.fopost.sdk.model.HighDemandPeriod;
 import com.fopost.sdk.model.IosCampaignLimits;
 import com.fopost.sdk.model.PartnershipCreator;
-import com.fopost.sdk.model.ProductCatalog;
-import com.fopost.sdk.model.ProductFeed;
-import com.fopost.sdk.model.ProductFeedUpload;
-import com.fopost.sdk.model.ProductSet;
 import com.fopost.sdk.model.ReachFrequencyPrediction;
 import com.fopost.sdk.model.ValueRuleSet;
 import com.fopost.sdk.param.AdLabelParams;
 import com.fopost.sdk.param.ApplyAdLabelParams;
-import com.fopost.sdk.param.CatalogProductBatchParams;
 import com.fopost.sdk.param.CreateAdStudyParams;
-import com.fopost.sdk.param.CreateCatalogParams;
 import com.fopost.sdk.param.CreateHighDemandPeriodParams;
-import com.fopost.sdk.param.CreateProductFeedParams;
 import com.fopost.sdk.param.CreateReachFrequencyParams;
 import com.fopost.sdk.param.CreateValueRuleSetParams;
 import com.fopost.sdk.param.PartnershipParams;
-import com.fopost.sdk.param.ProductSetParams;
 import com.fopost.sdk.param.ReachFrequencyActionParams;
-import com.fopost.sdk.param.StartFeedUploadParams;
-import com.fopost.sdk.param.UpdateCatalogParams;
-import com.fopost.sdk.model.AdAccountTree;
 import com.fopost.sdk.model.AdBusinessCenter;
-import com.fopost.sdk.model.AdCampaign;
 import com.fopost.sdk.model.AdCommentsPage;
 import com.fopost.sdk.model.AdConnection;
-import com.fopost.sdk.model.AdCreative;
 import com.fopost.sdk.model.AdIdentity;
 import com.fopost.sdk.model.AdInsightsReport;
-import com.fopost.sdk.model.AdLibraryPage;
 import com.fopost.sdk.model.AdProvider;
-import com.fopost.sdk.model.AdSet;
 import com.fopost.sdk.model.AdSource;
 import com.fopost.sdk.model.Audience;
 import com.fopost.sdk.model.AudiencesResult;
@@ -57,7 +40,6 @@ import com.fopost.sdk.model.LeadPage;
 import com.fopost.sdk.model.LeadPageSubscription;
 import com.fopost.sdk.model.LeadsFeed;
 import com.fopost.sdk.model.LeadsPage;
-import com.fopost.sdk.model.NetworkAd;
 import com.fopost.sdk.model.ReachEstimate;
 import com.fopost.sdk.model.SparkPost;
 import com.fopost.sdk.model.SupplyForecast;
@@ -67,19 +49,13 @@ import com.fopost.sdk.param.AdForecastParams;
 import com.fopost.sdk.param.AdInsightsParams;
 import com.fopost.sdk.param.BoostPostParams;
 import com.fopost.sdk.param.BulkAdStatusParams;
-import com.fopost.sdk.param.CreateAdCampaignParams;
-import com.fopost.sdk.param.CreateAdCreativeParams;
 import com.fopost.sdk.param.CreateAdParams;
-import com.fopost.sdk.param.CreateAdSetParams;
 import com.fopost.sdk.param.ConversionEventParams;
 import com.fopost.sdk.param.CreateAudienceParams;
 import com.fopost.sdk.param.CreateConversionRuleParams;
 import com.fopost.sdk.param.CreateLeadFormParams;
-import com.fopost.sdk.param.CreateNetworkAdParams;
 import com.fopost.sdk.param.LeadsFeedParams;
 import com.fopost.sdk.param.ReachEstimateParams;
-import com.fopost.sdk.param.UpdateAdCampaignParams;
-import com.fopost.sdk.param.UpdateAdSetParams;
 import com.fopost.sdk.model.AdPixel;
 import com.fopost.sdk.model.AdPixelDetail;
 import com.fopost.sdk.model.AdPixelStats;
@@ -93,14 +69,12 @@ import com.fopost.sdk.param.UpdatePixelParams;
 import com.fopost.sdk.param.UploadConversionsParams;
 import com.fopost.sdk.param.UpdateAudienceParams;
 import com.fopost.sdk.param.UpdateConversionRuleParams;
-import com.fopost.sdk.param.UpdateNetworkAdParams;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Boosts, ads, campaigns, creatives, catalogs, audiences, predictions, the public ad archive,
- * insights and lead forms on the connected ad accounts.
+ * Boosts, ads, audiences, predictions, insights and lead forms on the connected ad accounts.
  *
  * <pre>{@code
  * BoostablePost candidate = client.ads().boostable(workspaceId).get(0);
@@ -114,11 +88,9 @@ import java.util.Map;
  * }</pre>
  *
  * <p>Every call needs the {@code ads} scope on an API key. {@link #boost}, {@link #create},
- * {@link #setStatus} and {@link #delete} spend money and also need the {@code publish} scope, as do
- * creating, updating, deleting and duplicating campaigns, ad sets and network ads, and
- * {@link #bulkSetStatus}. A
- * boost or ad starts paused unless {@code paused} is set to false, so nothing is spent until it is
- * resumed.
+ * {@link #setStatus} and {@link #delete} spend money and also need the {@code publish} scope, as does
+ * {@link #bulkSetStatus}. A boost or ad starts paused unless {@code paused} is set to false, so
+ * nothing is spent until it is resumed.
  */
 public final class AdsResource {
 
@@ -267,147 +239,6 @@ public final class AdsResource {
         http.request("DELETE", "/v1/ads/" + adId, null, workspaceQuery(workspaceId));
     }
 
-    // ─── Campaigns, ad sets and ads ───────────────────────────────────────────
-
-    public AdAccountTree accountTree(String adAccountId, String connectionId) {
-        return accountTree(adAccountId, connectionId, null);
-    }
-
-    /** Every campaign on the ad account with its ad sets and ads, read live from Meta. */
-    public AdAccountTree accountTree(String adAccountId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(http.get(
-                        "/v1/ads/accounts/" + adAccountId + "/tree", connectionQuery(workspaceId, connectionId))),
-                AdAccountTree.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. Starts paused unless {@code paused} is false. */
-    public AdCampaign createCampaign(CreateAdCampaignParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/ads/campaigns", params.toMap())), AdCampaign.class);
-    }
-
-    public AdCampaign campaign(String campaignId, String connectionId) {
-        return campaign(campaignId, connectionId, null);
-    }
-
-    public AdCampaign campaign(String campaignId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(
-                        http.get("/v1/ads/campaigns/" + campaignId, connectionQuery(workspaceId, connectionId))),
-                AdCampaign.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. */
-    public AdCampaign updateCampaign(
-            String campaignId, String workspaceId, String connectionId, UpdateAdCampaignParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.request(
-                        "PATCH",
-                        "/v1/ads/campaigns/" + campaignId,
-                        params.toMap(),
-                        connectionQuery(workspaceId, connectionId))),
-                AdCampaign.class);
-    }
-
-    /** Deletes the campaign with its ad sets and ads. Needs the {@code publish} scope as well as {@code ads}. */
-    public void deleteCampaign(String campaignId, String workspaceId, String connectionId) {
-        http.request("DELETE", "/v1/ads/campaigns/" + campaignId, null, connectionQuery(workspaceId, connectionId));
-    }
-
-    public String duplicateCampaign(String campaignId, String workspaceId, String connectionId) {
-        return duplicateCampaign(campaignId, workspaceId, connectionId, null);
-    }
-
-    /**
-     * Copy the campaign and everything in it. Returns the copy's Meta id. The copy starts paused
-     * unless {@code paused} is false. Needs the {@code publish} scope as well as {@code ads}.
-     */
-    public String duplicateCampaign(String campaignId, String workspaceId, String connectionId, Boolean paused) {
-        return duplicate("/v1/ads/campaigns/" + campaignId, workspaceId, connectionId, paused);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. Starts paused unless {@code paused} is false. */
-    public AdSet createAdSet(CreateAdSetParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/ads/ad-sets", params.toMap())), AdSet.class);
-    }
-
-    public AdSet adSet(String adSetId, String connectionId) {
-        return adSet(adSetId, connectionId, null);
-    }
-
-    public AdSet adSet(String adSetId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(http.get("/v1/ads/ad-sets/" + adSetId, connectionQuery(workspaceId, connectionId))),
-                AdSet.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. */
-    public AdSet updateAdSet(String adSetId, String workspaceId, String connectionId, UpdateAdSetParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.request(
-                        "PATCH",
-                        "/v1/ads/ad-sets/" + adSetId,
-                        params.toMap(),
-                        connectionQuery(workspaceId, connectionId))),
-                AdSet.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. */
-    public void deleteAdSet(String adSetId, String workspaceId, String connectionId) {
-        http.request("DELETE", "/v1/ads/ad-sets/" + adSetId, null, connectionQuery(workspaceId, connectionId));
-    }
-
-    public String duplicateAdSet(String adSetId, String workspaceId, String connectionId) {
-        return duplicateAdSet(adSetId, workspaceId, connectionId, null);
-    }
-
-    /** Returns the copy's Meta id. Needs the {@code publish} scope as well as {@code ads}. */
-    public String duplicateAdSet(String adSetId, String workspaceId, String connectionId, Boolean paused) {
-        return duplicate("/v1/ads/ad-sets/" + adSetId, workspaceId, connectionId, paused);
-    }
-
-    /**
-     * An ad inside an ad set, unlike {@link #create}, which builds a whole campaign. Needs the
-     * {@code publish} scope as well as {@code ads}. Starts paused unless {@code paused} is false.
-     */
-    public NetworkAd createNetworkAd(CreateNetworkAdParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/ads/ads", params.toMap())), NetworkAd.class);
-    }
-
-    public NetworkAd networkAd(String adId, String connectionId) {
-        return networkAd(adId, connectionId, null);
-    }
-
-    /** {@code adId} is Meta's ad id. */
-    public NetworkAd networkAd(String adId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(http.get("/v1/ads/ads/" + adId, connectionQuery(workspaceId, connectionId))),
-                NetworkAd.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. */
-    public NetworkAd updateNetworkAd(
-            String adId, String workspaceId, String connectionId, UpdateNetworkAdParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.request(
-                        "PATCH", "/v1/ads/ads/" + adId, params.toMap(), connectionQuery(workspaceId, connectionId))),
-                NetworkAd.class);
-    }
-
-    /** Needs the {@code publish} scope as well as {@code ads}. */
-    public void deleteNetworkAd(String adId, String workspaceId, String connectionId) {
-        http.request("DELETE", "/v1/ads/ads/" + adId, null, connectionQuery(workspaceId, connectionId));
-    }
-
-    public String duplicateNetworkAd(String adId, String workspaceId, String connectionId) {
-        return duplicateNetworkAd(adId, workspaceId, connectionId, null);
-    }
-
-    /** Returns the copy's Meta id. Needs the {@code publish} scope as well as {@code ads}. */
-    public String duplicateNetworkAd(String adId, String workspaceId, String connectionId, Boolean paused) {
-        return duplicate("/v1/ads/ads/" + adId, workspaceId, connectionId, paused);
-    }
-
     /**
      * Pause or resume campaigns, ad sets and ads in one call; each object reports on its own.
      * Needs the {@code publish} scope as well as {@code ads}.
@@ -415,39 +246,6 @@ public final class AdsResource {
     public List<BulkAdStatusResult> bulkSetStatus(BulkAdStatusParams params) {
         return http.convertList(
                 ApiClient.unwrap(http.post("/v1/ads/status", params.toMap())), BulkAdStatusResult.class);
-    }
-
-    // ─── Creatives ────────────────────────────────────────────────────────────
-
-    public List<AdCreative> creatives(String connectionId, String adAccountId) {
-        return creatives(connectionId, adAccountId, null);
-    }
-
-    /** The creatives on one ad account. */
-    public List<AdCreative> creatives(String connectionId, String adAccountId, String workspaceId) {
-        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
-        query.put("ad_account_id", adAccountId);
-        return http.convertList(
-                ApiClient.unwrap(http.get("/v1/ads/creatives", query)).path("creatives"), AdCreative.class);
-    }
-
-    public AdCreative createCreative(CreateAdCreativeParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/ads/creatives", params.toMap())), AdCreative.class);
-    }
-
-    public AdCreative creative(String creativeId, String connectionId) {
-        return creative(creativeId, connectionId, null);
-    }
-
-    public AdCreative creative(String creativeId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(
-                        http.get("/v1/ads/creatives/" + creativeId, connectionQuery(workspaceId, connectionId))),
-                AdCreative.class);
-    }
-
-    public void deleteCreative(String creativeId, String workspaceId, String connectionId) {
-        http.request("DELETE", "/v1/ads/creatives/" + creativeId, null, connectionQuery(workspaceId, connectionId));
     }
 
     // ─── Reach and insights ───────────────────────────────────────────────────
@@ -1005,18 +803,6 @@ public final class AdsResource {
         http.request("DELETE", "/v1/ads/lead-pages/" + pageId, null, connectionQuery(workspaceId, connectionId));
     }
 
-    // ─── Plumbing ─────────────────────────────────────────────────────────────
-
-    private String duplicate(String path, String workspaceId, String connectionId, Boolean paused) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        if (paused != null) {
-            body.put("paused", paused);
-        }
-        return ApiClient.unwrap(http.post(path + "/duplicate", body, connectionQuery(workspaceId, connectionId)))
-                .path("id")
-                .asText();
-    }
-
     // ─── Goals ──────────────────────────────────────────────────────
 
     /**
@@ -1031,172 +817,6 @@ public final class AdsResource {
         return http.convertList(
                 ApiClient.unwrap(http.get("/v1/ads/goals", connectionQuery(workspaceId, connectionId))),
                 String.class);
-    }
-
-    // ─── Product catalogs ───────────────────────────────────────────
-
-    /** Catalogs the connection's business portfolios reach. Read live, never stored. */
-    public List<ProductCatalog> catalogs(String connectionId) {
-        return catalogs(connectionId, null);
-    }
-
-    public List<ProductCatalog> catalogs(String connectionId, String workspaceId) {
-        return http.convertList(
-                ApiClient.unwrap(http.get("/v1/ads/catalogs", connectionQuery(workspaceId, connectionId)))
-                        .path("catalogs"),
-                ProductCatalog.class);
-    }
-
-    /** Created on the connection's business portfolio. Also needs the {@code publish} scope. */
-    public ProductCatalog createCatalog(CreateCatalogParams params) {
-        return http.convert(ApiClient.unwrap(http.post("/v1/ads/catalogs", params.toMap())), ProductCatalog.class);
-    }
-
-    public ProductCatalog catalog(String catalogId, String connectionId) {
-        return catalog(catalogId, connectionId, null);
-    }
-
-    public ProductCatalog catalog(String catalogId, String connectionId, String workspaceId) {
-        return http.convert(
-                ApiClient.unwrap(
-                        http.get("/v1/ads/catalogs/" + catalogId, connectionQuery(workspaceId, connectionId))),
-                ProductCatalog.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public ProductCatalog updateCatalog(
-            String catalogId, String workspaceId, String connectionId, UpdateCatalogParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.request(
-                        "PATCH",
-                        "/v1/ads/catalogs/" + catalogId,
-                        params.toMap(),
-                        connectionQuery(workspaceId, connectionId))),
-                ProductCatalog.class);
-    }
-
-    /**
-     * Deletes the catalog with every product, feed and set in it. Also needs the {@code publish}
-     * scope.
-     */
-    public void deleteCatalog(String catalogId, String workspaceId, String connectionId) {
-        http.request("DELETE", "/v1/ads/catalogs/" + catalogId, null, connectionQuery(workspaceId, connectionId));
-    }
-
-    /** One page of products; pass {@code nextCursor} back as {@code after}. */
-    public CatalogProductsPage catalogProducts(String catalogId, String connectionId) {
-        return catalogProducts(catalogId, connectionId, null, null);
-    }
-
-    public CatalogProductsPage catalogProducts(
-            String catalogId, String connectionId, String workspaceId, String after) {
-        Map<String, Object> query = connectionQuery(workspaceId, connectionId);
-        if (after != null) {
-            query.put("after", after);
-        }
-        return http.convert(
-                ApiClient.unwrap(http.get("/v1/ads/catalogs/" + catalogId + "/products", query)),
-                CatalogProductsPage.class);
-    }
-
-    /**
-     * Up to 500 upserts and deletes in one batch, keyed by your own retailer id. Also needs the
-     * {@code publish} scope.
-     */
-    public CatalogBatchResult writeCatalogProducts(String catalogId, CatalogProductBatchParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/products", params.toMap())),
-                CatalogBatchResult.class);
-    }
-
-    public List<ProductFeed> productFeeds(String catalogId, String connectionId) {
-        return productFeeds(catalogId, connectionId, null);
-    }
-
-    public List<ProductFeed> productFeeds(String catalogId, String connectionId, String workspaceId) {
-        return http.convertList(
-                ApiClient.unwrap(http.get(
-                        "/v1/ads/catalogs/" + catalogId + "/feeds", connectionQuery(workspaceId, connectionId))),
-                ProductFeed.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public ProductFeed createProductFeed(String catalogId, CreateProductFeedParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/feeds", params.toMap())),
-                ProductFeed.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public void deleteProductFeed(String catalogId, String feedId, String workspaceId, String connectionId) {
-        http.request(
-                "DELETE",
-                "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId,
-                null,
-                connectionQuery(workspaceId, connectionId));
-    }
-
-    /** Each run the network made of the feed. */
-    public List<ProductFeedUpload> feedUploads(String catalogId, String feedId, String connectionId) {
-        return feedUploads(catalogId, feedId, connectionId, null);
-    }
-
-    public List<ProductFeedUpload> feedUploads(
-            String catalogId, String feedId, String connectionId, String workspaceId) {
-        return http.convertList(
-                ApiClient.unwrap(http.get(
-                        "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId + "/uploads",
-                        connectionQuery(workspaceId, connectionId))),
-                ProductFeedUpload.class);
-    }
-
-    /** Fetches the feed now and returns the id of the run. Also needs the {@code publish} scope. */
-    public String startFeedUpload(String catalogId, String feedId, StartFeedUploadParams params) {
-        return ApiClient.unwrap(http.post(
-                        "/v1/ads/catalogs/" + catalogId + "/feeds/" + feedId + "/uploads", params.toMap()))
-                .path("id")
-                .asText();
-    }
-
-    /** A catalog ad runs from a product set, not the whole catalog. */
-    public List<ProductSet> productSets(String catalogId, String connectionId) {
-        return productSets(catalogId, connectionId, null);
-    }
-
-    public List<ProductSet> productSets(String catalogId, String connectionId, String workspaceId) {
-        return http.convertList(
-                ApiClient.unwrap(http.get(
-                        "/v1/ads/catalogs/" + catalogId + "/product-sets",
-                        connectionQuery(workspaceId, connectionId))),
-                ProductSet.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public ProductSet createProductSet(String catalogId, ProductSetParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.post("/v1/ads/catalogs/" + catalogId + "/product-sets", params.toMap())),
-                ProductSet.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public ProductSet updateProductSet(
-            String catalogId, String setId, String workspaceId, String connectionId, ProductSetParams params) {
-        return http.convert(
-                ApiClient.unwrap(http.request(
-                        "PATCH",
-                        "/v1/ads/catalogs/" + catalogId + "/product-sets/" + setId,
-                        params.toMap(),
-                        connectionQuery(workspaceId, connectionId))),
-                ProductSet.class);
-    }
-
-    /** Also needs the {@code publish} scope. */
-    public void deleteProductSet(String catalogId, String setId, String workspaceId, String connectionId) {
-        http.request(
-                "DELETE",
-                "/v1/ads/catalogs/" + catalogId + "/product-sets/" + setId,
-                null,
-                connectionQuery(workspaceId, connectionId));
     }
 
     // ─── Reach and frequency ────────────────────────────────────────
@@ -1253,38 +873,6 @@ public final class AdsResource {
     public ReachFrequencyPrediction cancelReachFrequency(
             String predictionId, ReachFrequencyActionParams params) {
         return reachFrequencyAction(predictionId, "cancel", params);
-    }
-
-    // ─── Ad Library ─────────────────────────────────────────────────
-
-    /**
-     * The public ad archive: ads anyone is running, by keyword or by Page. Read live on every call
-     * and stored nowhere, so an ad that stops running is simply absent from the next search.
-     * {@code countries} are two-letter codes the ad reached.
-     */
-    public AdLibraryPage library(String connectionId, List<String> countries, String query) {
-        return library(connectionId, countries, query, null, null, null);
-    }
-
-    public AdLibraryPage library(
-            String connectionId,
-            List<String> countries,
-            String query,
-            List<String> pageIds,
-            String activeStatus,
-            String workspaceId) {
-        Map<String, Object> params = connectionQuery(workspaceId, connectionId);
-        params.put("countries", String.join(",", countries));
-        if (query != null) {
-            params.put("q", query);
-        }
-        if (pageIds != null && !pageIds.isEmpty()) {
-            params.put("page_ids", String.join(",", pageIds));
-        }
-        if (activeStatus != null) {
-            params.put("active_status", activeStatus);
-        }
-        return http.convert(ApiClient.unwrap(http.get("/v1/ads/library", params)), AdLibraryPage.class);
     }
 
     // ─── Partnership ads ────────────────────────────────────────────

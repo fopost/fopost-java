@@ -109,17 +109,13 @@ anything unwrapped.
   `setStatus` and `delete` also need the `publish` scope, and a boost or ad starts paused unless
   `paused` is false. Say both in the javadoc of anything new that spends.
 - `googleAds` (scope `ads`) covers `/v1/ads/google/*` plus the GAQL passthrough at
-  `POST /v1/ads/insights/query`: recommendations, the optimization score, keywords, keyword
-  ideas, search terms, bid strategies, the ad schedule, negative keyword lists, assets,
-  Performance Max asset groups, Local Services leads and conversions. A connection on another
-  network answers 400, so this is the one resource that is not network-agnostic. Campaigns, ad
-  groups, ads, audiences, insights, labels, change history, experiments and conversion value
-  rules are all on `ads` and work on Google through the shared routes — do not duplicate them
-  here. `GoogleAdsScope` carries the connection and the customer, and renders snake_case on a
-  query and camelCase in a body, because the API takes it both ways. An object id is
-  `<customerId>~<kind>~<id>`: a Google resource name has slashes and cannot ride in a path
-  segment. Applying a recommendation changes what the live account serves or bids, so it needs
-  `publish`; dismissing one only hides it.
+  `POST /v1/ads/insights/query`: bid strategies, the ad schedule, Local Services leads and
+  conversions. A connection on another network answers 400, so this is the one resource that is
+  not network-agnostic. Ads, audiences and insights are on `ads` and work on Google through the
+  shared routes; do not duplicate them here. `GoogleAdsScope` carries the connection and the
+  customer, and renders snake_case on a query and camelCase in a body, because the API takes it
+  both ways. An object id is `<customerId>~<kind>~<id>`: a Google resource name has slashes and
+  cannot ride in a path segment.
 
 ## API Contract
 

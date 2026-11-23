@@ -60,6 +60,22 @@ All notable changes to this project are documented here. The format follows
   website secret and test, destinations, keywords, articles), with `BlogParams`, every `Blog*`
   model and constant class, and `WebhookEvents.ARTICLE_PUBLISHED`. Articles are ordinary posts
   now; `blogs()` (remote articles on a connected site) is unchanged.
+- `ads()` drops the endpoints the API no longer serves: the account tree (`accountTree`),
+  campaign, ad set and network ad CRUD and duplication (`createCampaign`, `campaign`,
+  `updateCampaign`, `deleteCampaign`, `duplicateCampaign`, and the `AdSet` and `NetworkAd`
+  equivalents), creatives (`creatives`, `createCreative`, `creative`, `deleteCreative`), product
+  catalogs with their products, feeds, feed uploads and product sets, and the Ad Library
+  (`library`). Their models and params go with them (`AdAccountTree`, `AdCampaign`, `AdSet`,
+  `NetworkAd`, `AdCreative`, `ProductCatalog`, `CatalogProduct`, `ProductFeed`, `ProductSet`,
+  `AdLibraryPage`, `CreateAdCampaignParams`, `CreateAdCreativeParams`, `CatalogProductParams` and
+  the rest). `create`, `boost`, `bulkSetStatus`, insights, audiences and lead forms are
+  unchanged.
+- `googleAds()` drops recommendations, the optimization score, keywords, keyword ideas and
+  metrics, search terms, negative keyword lists, assets and Performance Max asset groups, with
+  their `Google*` models and params. Bid strategies, the ad schedule, Local Services leads,
+  conversions and `query` are unchanged.
+- `AdProvider.capabilities()` no longer carries `creatives`, `catalogs`, `adLibrary` or
+  `smartPlus`.
 
 ## [0.4.0] - 2026-10-18
 

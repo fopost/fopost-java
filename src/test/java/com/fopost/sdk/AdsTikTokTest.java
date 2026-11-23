@@ -9,7 +9,6 @@ import com.fopost.sdk.model.AdIdentity;
 import com.fopost.sdk.model.SparkPost;
 import com.fopost.sdk.param.AdBudgetParams;
 import com.fopost.sdk.param.AdTargetingParams;
-import com.fopost.sdk.param.CreateAdCampaignParams;
 import com.fopost.sdk.param.CreateAdParams;
 import com.fopost.sdk.param.UploadConversionsParams;
 import java.util.List;
@@ -41,11 +40,10 @@ class AdsTikTokTest {
     }
 
     @Test
-    void sparkPostIdAndSmartPlusTravelInTheBody() {
+    void sparkPostIdTravelsInTheBody() {
         FakeTransport transport = new FakeTransport()
                 .enqueue(201, "{\"data\":{\"id\":\"ad1\",\"workspaceId\":\"w1\",\"kind\":\"ad\",\"name\":\"Spark\","
-                        + "\"goal\":\"traffic\",\"status\":\"paused\"}}")
-                .enqueue(201, "{\"data\":{\"id\":\"c1\",\"name\":\"Smart\",\"status\":\"PAUSED\"}}");
+                        + "\"goal\":\"traffic\",\"status\":\"paused\"}}");
 
         FoPost client = TestSupport.client(transport);
 
@@ -62,11 +60,6 @@ class AdsTikTokTest {
                                 "")
                         .sparkPostId("item_99"));
         assertTrue(transport.lastBody().contains("\"sparkPostId\":\"item_99\""));
-
-        client.ads()
-                .createCampaign(CreateAdCampaignParams.of("w1", "c1", "7011", "Smart", "traffic")
-                        .smartPlus(true));
-        assertTrue(transport.lastBody().contains("\"smartPlus\":true"));
     }
 
     @Test

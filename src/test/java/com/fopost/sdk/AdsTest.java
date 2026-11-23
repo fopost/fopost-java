@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fopost.sdk.model.Ad;
-import com.fopost.sdk.model.AdAccountTree;
-import com.fopost.sdk.model.AdCampaign;
-import com.fopost.sdk.model.AdCreative;
 import com.fopost.sdk.model.AdInsightsReport;
 import com.fopost.sdk.model.AudiencesResult;
 import com.fopost.sdk.model.BulkAdStatusResult;
@@ -18,13 +15,10 @@ import com.fopost.sdk.param.AdInsightsParams;
 import com.fopost.sdk.param.AdTargetingParams;
 import com.fopost.sdk.param.BoostPostParams;
 import com.fopost.sdk.param.BulkAdStatusParams;
-import com.fopost.sdk.param.CreateAdCampaignParams;
-import com.fopost.sdk.param.CreateAdCreativeParams;
 import com.fopost.sdk.param.CreateAdParams;
 import com.fopost.sdk.param.CreateAudienceParams;
 import com.fopost.sdk.param.CreateLeadFormParams;
 import com.fopost.sdk.param.LeadsFeedParams;
-import com.fopost.sdk.param.UpdateAdCampaignParams;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -141,57 +135,12 @@ class AdsTest {
     }
 
     @Test
-    void accountTreeNestsAdSetsAndAdsUnderCampaigns() {
+    void bulkSetStatusReportsEachObject() {
         FakeTransport transport = new FakeTransport()
-                .enqueue(200, """
-                        {"data":{"adAccountId":"act_123","currency":"USD","workspaceId":"w1",
-                                 "campaigns":[{"id":"cmp1","name":"Launch","status":"PAUSED","objective":"OUTCOME_TRAFFIC",
-                                               "budgetMinor":null,"budgetType":null,
-                                               "adSets":[{"id":"set1","name":"US","campaignId":"cmp1","status":"PAUSED",
-                                                          "budgetMinor":2000,"budgetType":"daily",
-                                                          "ads":[{"id":"ad9","name":"A","adSetId":"set1",
-                                                                  "creativeId":"cr1","status":"PAUSED"}]}]}]}}""");
-
-        AdAccountTree tree = TestSupport.client(transport).ads().accountTree("act_123", "c1", "w1");
-
-        assertEquals("GET", transport.last().method());
-        assertEquals("https://api.fopost.test/v1/ads/accounts/act_123/tree?workspace_id=w1&connection_id=c1",
-                transport.last().url());
-        assertNull(tree.campaigns().get(0).budgetMinor());
-        assertEquals(2000L, tree.campaigns().get(0).adSets().get(0).budgetMinor());
-        assertEquals("cr1", tree.campaigns().get(0).adSets().get(0).ads().get(0).creativeId());
-    }
-
-    @Test
-    void campaignWritesCarryTheConnectionAndDuplicateReturnsTheCopyId() {
-        FakeTransport transport = new FakeTransport()
-                .enqueue(201, "{\"data\":{\"id\":\"cmp1\",\"name\":\"Launch\",\"status\":\"PAUSED\"}}")
-                .enqueue(200, "{\"data\":{\"id\":\"cmp1\",\"name\":\"Launch\",\"status\":\"ACTIVE\"}}")
-                .enqueue(201, "{\"data\":{\"id\":\"cmp2\"}}")
                 .enqueue(200, "{\"data\":[{\"id\":\"cmp1\",\"level\":\"campaign\",\"ok\":true,\"error\":null},"
                         + "{\"id\":\"ad9\",\"level\":\"ad\",\"ok\":false,\"error\":\"Not found\"}]}");
 
         FoPost client = TestSupport.client(transport);
-
-        AdCampaign created = client.ads().createCampaign(
-                CreateAdCampaignParams.of("w1", "c1", "act_123", "Launch", "traffic"));
-        assertEquals("https://api.fopost.test/v1/ads/campaigns", transport.last().url());
-        assertEquals(
-                "{\"workspaceId\":\"w1\",\"connectionId\":\"c1\",\"adAccountId\":\"act_123\",\"name\":\"Launch\","
-                        + "\"goal\":\"traffic\"}",
-                transport.lastBody());
-        assertEquals("PAUSED", created.status());
-
-        client.ads().updateCampaign("cmp1", "w1", "c1", UpdateAdCampaignParams.create().status("active"));
-        assertEquals("PATCH", transport.last().method());
-        assertEquals("https://api.fopost.test/v1/ads/campaigns/cmp1?workspace_id=w1&connection_id=c1",
-                transport.last().url());
-        assertEquals("{\"status\":\"active\"}", transport.lastBody());
-
-        assertEquals("cmp2", client.ads().duplicateCampaign("cmp1", "w1", "c1", false));
-        assertEquals("https://api.fopost.test/v1/ads/campaigns/cmp1/duplicate?workspace_id=w1&connection_id=c1",
-                transport.last().url());
-        assertEquals("{\"paused\":false}", transport.lastBody());
 
         List<BulkAdStatusResult> results = client.ads().bulkSetStatus(
                 BulkAdStatusParams.of("w1", "c1", "paused").campaign("cmp1").ad("ad9"));
@@ -257,29 +206,11 @@ class AdsTest {
     }
 
     @Test
-    void creativesAndAdUrlTagsTravelInTheBody() {
+    void adUrlTagsTravelInTheBody() {
         FakeTransport transport = new FakeTransport()
-                .enqueue(201, "{\"data\":{\"id\":\"cr1\",\"format\":\"carousel\",\"urlTags\":\"utm_source=meta\"}}")
-                .enqueue(200, "{\"data\":{\"creatives\":[{\"id\":\"cr1\",\"name\":\"Spring\"}],\"workspaceId\":\"w1\"}}")
                 .enqueue(201, "{\"data\":{\"id\":\"ad1\",\"creative\":{\"text\":\"Hi\",\"urlTags\":\"utm_source=meta\"}}}");
 
         FoPost client = TestSupport.client(transport);
-
-        AdCreative creative = client.ads().createCreative(CreateAdCreativeParams.of(
-                        "w1", "c1", "act_123", "page1", "Spring", "carousel", "New season")
-                .urlTags("utm_source=meta")
-                .card("https://cdn.yourbrand.com/1.jpg")
-                .card("https://cdn.yourbrand.com/2.jpg", null, "Two", null));
-        assertTrue(transport.lastBody().contains("\"urlTags\":\"utm_source=meta\""));
-        assertTrue(transport.lastBody().contains(
-                "\"cards\":[{\"mediaUrl\":\"https://cdn.yourbrand.com/1.jpg\"},"
-                        + "{\"mediaUrl\":\"https://cdn.yourbrand.com/2.jpg\",\"headline\":\"Two\"}]"));
-        assertEquals("utm_source=meta", creative.urlTags());
-
-        List<AdCreative> creatives = client.ads().creatives("c1", "act_123");
-        assertEquals("https://api.fopost.test/v1/ads/creatives?connection_id=c1&ad_account_id=act_123",
-                transport.last().url());
-        assertEquals("Spring", creatives.get(0).name());
 
         Ad ad = client.ads().create(CreateAdParams.of(
                         "w1", "c1", "act_123", "page1", "Spring", "traffic",
